@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Quanridor</title>
+    <link rel="stylesheet" href="css/style.css" type ="text/css">
+</head>
+<body id="game">
+    <div class="horizontal-container">
+        <div class="vertical-small-container">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <div class="profile-box">
+                <div class="vertical-small-container">
+                    <br>
+                    <svg id="user"></svg>
+                    <h1 class="text">Player 1</h1>
+                    <div id="separator"></div>
+                    <h1 class="text">ELO : 100</h1>
+                </div>
+            </div>
+        </div>
+        <div class="vertical-small-container">
+            <canvas></canvas>
+            <div class="horizontal-small-container">
+                <button class="small-button" id="confirm">Put Wall</button>
+                <a href="home.html"><button class="small-button" id="leave"> Leave</button></a>
+            </div>
+        </div>
+        <div class="vertical-small-container">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <div class="profile-box">
+                <div class="vertical-small-container">
+                    <br>
+                    <svg id="user"></svg>
+                    <h1 class="text">IA</h1>
+                    <div id="separator"></div>
+                    <h1 class="text">ELO : 100</h1>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <h1 id="win"></h1>
+
+    
+    <script src="js/auto-redirect-if-not-logged.js"></script>
+    <script src="js/game-ia-client.js" type="module"></script>
+</body>
+</html>
