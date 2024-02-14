@@ -1,6 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { Server } = require("socket.io");
-const AI0 = require("./ai.js");
+const AI0 = require("./minimax-ai.js");
 const { getDB } = require("../../query-managers/db.js");
 const { initializeGame } = require("../utils/game-initializer.js");
 const { verifyToken } = require("../../utils/jwt-utils.js");
@@ -65,8 +65,6 @@ function createSocket(server) {
       // Join the game
       socket.join(game._id.toString());
       socket.emit("gameCreated", game);
-
-      console.log(game);
     });
 
     socket.on("gameId", async (data) => {
@@ -196,7 +194,7 @@ function createSocket(server) {
     socket.on("sendGameState", async (data) => {
       const gameId = data.gameId;
       const gameState = data.gameState;
-      let newCoord = AI0(gameState);
+      let newCoord = AI0.compteMove(gameState);
       gameState.playerspositions[1] = newCoord;
       const db = getDB();
       const games = db.collection("games");
