@@ -1,12 +1,16 @@
 const {
   checkWin,
-  cloneGameState,
+  getPossibleMoves,
   getPossibleMovesAndStrategicWalls,
   getShortestPath,
   applyMove,
   getNextMoveToFollowShortestPath,
   canWin,
   areGoalsInsidePath,
+  getManhattanDistance,
+  getPawnDistance,
+  isOnGoalSide,
+  getStrategicWalls,
 } = require("../utils/game-checkers.js");
 
 const p1goals = [
@@ -32,90 +36,98 @@ const p2goals = [
   [8, 8],
 ];
 
-function selectRandom(array) {
-  return array[Math.floor(Math.random() * array.length)];
-}
-
-function heuristicSelect(moves, gameState, player) {
+function heuristicEvaluation(state, player) {
   const playerGoals = player === 1 ? p1goals : p2goals;
   const opponentGoals = player === 1 ? p2goals : p1goals;
-  const playerPosition = gameState.playerspositions[player - 1];
-  const opponentPosition = gameState.playerspositions[player === 1 ? 1 : 0];
+  const playerPosition = state.playerspositions[player - 1];
+  const opponentPosition = state.playerspositions[player === 1 ? 1 : 0];
 
   const playerPathLength = getShortestPath(
     playerPosition,
     playerGoals,
-    gameState,
+    state,
     player,
   ).length;
   const opponentPathLength = getShortestPath(
     opponentPosition,
     opponentGoals,
-    gameState,
+    state,
     player === 1 ? 2 : 1,
   ).length;
 
+  const playerManhattanDist = getManhattanDistance(playerPosition, playerGoals);
+  const opponentManhattanDist = getManhattanDistance(
+    opponentPosition,
+    opponentGoals,
+  );
+  const pawnDistance = getPawnDistance(playerPosition, opponentPosition, state);
+  const playerOnGoalSide = isOnGoalSide(playerPosition, state);
+  const opponentOnGoalSide = isOnGoalSide(opponentPosition, state);
+  const playerWallsRemaining = player === 1 ? state.p1walls : state.p2walls;
+  const opponentWallsRemaining = player === 1 ? state.p2walls : state.p1walls;
+
+  const lateGameWeight =
+    playerPathLength <= 3 || opponentPathLength <= 3 ? 2 : 1;
+
+  const eval =
+    (playerPathLength * -3.0 +
+      opponentPathLength * 2.0 +
+      playerManhattanDist * -1.0 +
+      opponentManhattanDist * 0.8 +
+      pawnDistance * 1.5 +
+      (playerOnGoalSide ? 2.0 : 0) +
+      (opponentOnGoalSide ? -2.0 : 0) +
+      playerWallsRemaining * 0.3 +
+      opponentWallsRemaining * -0.2) *
+    lateGameWeight;
+
+  return eval;
+}
+
+function heuristicSelect(moves, state, player) {
   let bestMove = null;
-  let highestScore = -Infinity;
+  let bestEval = -Infinity;
 
   for (let move of moves) {
-    const newState = applyMove(gameState, move, player);
+    const newState = applyMove(state, move, player);
     if (!newState) continue;
 
-    const newPlayerPathLength = getShortestPath(
-      newState.playerspositions[player - 1],
-      playerGoals,
-      newState,
-      player,
-    ).length;
-    const newOpponentPathLength = getShortestPath(
-      newState.playerspositions[player === 1 ? 1 : 0],
-      opponentGoals,
-      newState,
-      player === 1 ? 2 : 1,
-    ).length;
+    const eval = heuristicEvaluation(newState, player);
 
-    const pathShorteningScore = playerPathLength - newPlayerPathLength;
-    const opponentHindranceScore = newOpponentPathLength - opponentPathLength;
-
-    const opponentHindranceWeight = opponentPathLength <= 3 ? 3.0 : 1.5;
-
-    const score =
-      pathShorteningScore * 2.0 +
-      opponentHindranceScore * opponentHindranceWeight;
-
-    if (score > highestScore) {
-      highestScore = score;
+    if (eval > bestEval) {
+      bestEval = eval;
       bestMove = move;
     }
   }
 
-  return bestMove || getNextMoveToFollowShortestPath(gameState, player);
+  return bestMove || getNextMoveToFollowShortestPath(state, player);
 }
 
 class Node {
-  constructor(parent, move, gameState, player) {
+  constructor(parent, move, state, player) {
     this.parent = parent;
     this.move = move;
-    this.gameState = gameState;
+    this.state = state;
     this.children = [];
     this.wins = 0;
     this.visits = 0;
     const { possibleMoves, possibleWalls } = getPossibleMovesAndStrategicWalls(
-      gameState,
+      state,
       player,
     );
-    this.untriedMoves = possibleMoves.concat(possibleWalls);
+    this.untriedMoves = new Set(possibleMoves.concat(possibleWalls));
   }
 
-  selectChild(explorationParam = Math.sqrt(2)) {
+  selectChild(explorationParam = 1.414) {
     let selectedChild = null;
     let bestUCTValue = -Infinity;
 
     for (let child of this.children) {
       const uctValue =
         child.wins / child.visits +
-        explorationParam * Math.sqrt(Math.log(this.visits) / child.visits);
+        explorationParam *
+          Math.sqrt(Math.log(this.visits) / child.visits) *
+          (1 + Math.sqrt(this.visits) / (1 + child.visits));
       if (uctValue > bestUCTValue) {
         selectedChild = child;
         bestUCTValue = uctValue;
@@ -127,7 +139,7 @@ class Node {
 
   addChild(move, gameState, player) {
     const child = new Node(this, move, gameState, player);
-    this.untriedMoves = this.untriedMoves.filter((m) => m !== move);
+    this.untriedMoves.delete(move);
     this.children.push(child);
     return child;
   }
@@ -137,26 +149,44 @@ class Node {
     this.wins += outcome;
   }
 
-  simulate(player) {
-    let state = cloneGameState(this.gameState);
+  simulate(player, depth = 0, maxDepth = 50) {
+    if (depth >= maxDepth) return 0;
+
+    let state = this.state;
     let currentPlayer = player;
 
     while (true) {
-      const { possibleMoves, possibleWalls } =
-        getPossibleMovesAndStrategicWalls(state, currentPlayer);
-      const concatenatedMoves = possibleMoves.concat(possibleWalls);
+      const possibleWalls = getStrategicWalls(state, currentPlayer);
+      const wallsLeft = currentPlayer === 1 ? state.p1walls : state.p2walls;
 
-      if (concatenatedMoves.length === 0) break;
+      if (Math.random() < 0.7 || wallsLeft === 0) {
+        // Move the pawn to one of the shortest paths
+        const move = getNextMoveToFollowShortestPath(state, currentPlayer);
+        if (!move) break;
+        state = applyMove(state, move, currentPlayer);
+      } else {
+        // Place a probable wall randomly or move the pawn backwards
+        if (possibleWalls.length > 0) {
+          const randomWall =
+            possibleWalls[Math.floor(Math.random() * possibleWalls.length)];
+          state = applyMove(state, randomWall, currentPlayer);
+        } else {
+          const backwardMove = getBackwardMove(state, currentPlayer);
+          if (!backwardMove) break;
+          state = applyMove(state, backwardMove, currentPlayer);
+        }
+      }
 
-      const move = selectRandom(concatenatedMoves);
-      if (move === undefined) break;
-
-      state = applyMove(state, move, currentPlayer);
       currentPlayer = currentPlayer === 1 ? 2 : 1;
 
       if (checkWin(state, player)) return 1;
       if (checkWin(state, player === 1 ? 2 : 1)) return -1;
+      if (canWin(state, player).canWin) return 1;
+      if (canWin(state, player === 1 ? 2 : 1).canWin) return -1;
       if (state.turn >= 200) return 0;
+
+      depth++;
+      if (depth >= maxDepth) return 0;
     }
 
     return 0;
@@ -166,26 +196,43 @@ class Node {
 function computeMove(
   gameState,
   player,
-  iterations = 1000,
   timeLimit = 500,
-  explorationParam = Math.sqrt(2),
+  explorationParam = 1.414,
 ) {
-  const startTime = Date.now();
-
+  const playerWalls = player === 1 ? gameState.p1walls : gameState.p2walls;
   const { canWin: canWinPlayer, path: playerPath } = canWin(gameState, player);
   const { canWin: canWinOpponent, path: opponentPath } = canWin(
     gameState,
     player === 1 ? 2 : 1,
   );
 
-  if (canWinPlayer) {
+  if (playerPath.length === 0) {
+    playerPath = getShortestPath(
+      playerPosition,
+      [opponentPosition],
+      gameState,
+      player,
+    );
+
+    if (playerPath.length === 0) {
+      return gameState.playerspositions[player - 1];
+    } else if (playerWalls === 0) {
+      return playerPath[1];
+    }
+  }
+
+  if (
+    (playerPath.length > 1 &&
+      canWinPlayer &&
+      !canWinOpponent &&
+      playerWalls === 0) ||
+    playerWalls === 0
+  ) {
     return playerPath[1];
   } else if (
     canWinOpponent &&
     areGoalsInsidePath(opponentPath, player === 1 ? p2goals : p1goals)
   ) {
-    // Place wall to block opponent's winning path
-    const opponentNextMove = opponentPath[1];
     const wallMoves = getPossibleMovesAndStrategicWalls(
       gameState,
       player,
@@ -205,23 +252,32 @@ function computeMove(
   let bestMove = null;
   let bestWinRatio = -Infinity;
 
-  for (let i = 0; i < iterations; i++) {
-    if (Date.now() - startTime > timeLimit) {
-      break;
-    }
+  const endTime = Date.now() + timeLimit;
 
+  while (Date.now() < endTime) {
     let node = root;
-    let state = cloneGameState(gameState);
+    let state = node.state;
 
     // Selection
-    while (node.untriedMoves.length === 0 && node.children.length > 0) {
+    while (node.untriedMoves.size === 0 && node.children.length > 0) {
       node = node.selectChild(explorationParam);
-      state = applyMove(state, node.move, player);
+      state = node.state;
     }
 
     // Expansion
-    if (node.untriedMoves.length > 0) {
-      const move = heuristicSelect(node.untriedMoves, state, player);
+    if (node.untriedMoves.size > 0) {
+      const opponentWallsLeft = player === 1 ? state.p2walls : state.p1walls;
+      let move;
+
+      if (opponentWallsLeft === 0) {
+        const { possibleMoves, possibleWalls } =
+          getPossibleMovesAndStrategicWalls(state, player);
+        const candidateMoves = [...possibleMoves, ...possibleWalls];
+        move = heuristicSelect(candidateMoves, state, player);
+      } else {
+        move = heuristicSelect(Array.from(node.untriedMoves), state, player);
+      }
+
       state = applyMove(state, move, player);
       node = node.addChild(move, state, player);
     }
@@ -238,12 +294,39 @@ function computeMove(
     // Update best move
     const winRatio = root.wins / root.visits;
     if (winRatio > bestWinRatio) {
-      bestMove = root.selectChild(0).move;
+      bestMove = root.children.reduce(
+        (best, child) => (child.visits > best.visits ? child : best),
+        root.children[0],
+      ).move;
       bestWinRatio = winRatio;
     }
   }
 
   return bestMove;
+}
+
+function getBackwardMove(gameState, player) {
+  const playerPosition = gameState.playerspositions[player - 1];
+  const opponentPosition = gameState.playerspositions[player === 1 ? 1 : 0];
+  const playerGoals = player === 1 ? p1goals : p2goals;
+
+  const possibleMoves = getPossibleMoves(gameState, playerPosition, player);
+
+  let maxDistanceMove = null;
+  let maxDistance = -Infinity;
+
+  for (const move of possibleMoves) {
+    const distance =
+      getManhattanDistance(move, playerGoals) +
+      getManhattanDistance(move, opponentPosition);
+
+    if (distance > maxDistance) {
+      maxDistance = distance;
+      maxDistanceMove = move;
+    }
+  }
+
+  return maxDistanceMove;
 }
 
 module.exports = { computeMove };

@@ -1,6 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { Server } = require("socket.io");
-const Random = require("./random-ai.js");
+const Rulebased = require("./rulebased-ai.js");
 const Minimax = require("./minimax-ai.js");
 const MCTS = require("./mcts-ai.js");
 const { getDB } = require("../../query-managers/db.js");
@@ -11,7 +11,6 @@ const {
   canJump,
   checkWin,
   isWallLegal,
-  canWin,
   getNextMoveToFollowShortestPath,
 } = require("../utils/game-checkers.js");
 
@@ -143,17 +142,12 @@ function createSocket(server) {
       const gameId = data.gameId;
       const gameState = data.gameState;
       // Check if someone won
-      if (
-        checkWin(1, {
-          p1_coord: gameState.playerspositions[0],
-          p2_coord: gameState.playerspositions[1],
-        })
-      ) {
+      if (checkWin(gameState, 1)) {
         const gameId = data.gameId;
 
         // @arol90 c'est quoi cette merde
         // const gameState = data.gameState;
-        // let newCoord = Random.computeMove(gameState);
+        // let newCoord = Rulebased.computeMove(gameState);
         // gameState.playerspositions[1] = newCoord;
 
         // Tiens voilà mieux
@@ -196,12 +190,7 @@ function createSocket(server) {
           { $set: gameState },
         );
 
-        if (
-          checkWin(2, {
-            p1_coord: gameState.playerspositions[0],
-            p2_coord: newCoord,
-          })
-        ) {
+        if (checkWin(gameState, 2)) {
           const games = db.collection("games");
           let res2 = await games.updateOne(
             { _id: new ObjectId(gameId) },
@@ -229,12 +218,7 @@ function createSocket(server) {
           const game = await games.findOne({ _id: new ObjectId(gameId) });
           socket.emit("win", game);
         }
-      } else if (
-        checkWin(2, {
-          p1_coord: gameState.playerspositions[0],
-          p2_coord: gameState.playerspositions[1],
-        })
-      ) {
+      } else if (checkWin(gameState, 2)) {
         const db = getDB();
         const games = db.collection("games");
         const users = db.collection("users");
@@ -279,7 +263,7 @@ function createSocket(server) {
       let newCoord;
       let startTime = performance.now();
       if (gameState.difficulty === 0) {
-        newCoord = Random.computeMove(gameState);
+        newCoord = Rulebased.computeMove(gameState, 2);
       } else if (gameState.difficulty === 1) {
         newCoord = Minimax.computeMove(gameState, 2);
       } else if (gameState.difficulty === 2) {

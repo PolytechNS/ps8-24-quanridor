@@ -6,32 +6,11 @@ const {
   getPossibleMoves,
   getPossibleWalls,
   applyMove,
-  areGoalsInsidePath,
   canWin,
+  areGoalsInsidePath,
+  p1goals,
+  p2goals,
 } = require("../utils/game-checkers.js");
-
-const p1goals = [
-  [0, 0],
-  [1, 0],
-  [2, 0],
-  [3, 0],
-  [4, 0],
-  [5, 0],
-  [6, 0],
-  [7, 0],
-  [8, 0],
-];
-const p2goals = [
-  [0, 8],
-  [1, 8],
-  [2, 8],
-  [3, 8],
-  [4, 8],
-  [5, 8],
-  [6, 8],
-  [7, 8],
-  [8, 8],
-];
 
 class TranspositionTable {
   constructor() {
@@ -52,13 +31,15 @@ const transpositionTable = new TranspositionTable();
 function createUniqueKey(gameState, player) {
   const { playerspositions, p1walls, p2walls, vwalls, hwalls } = gameState;
   const [p1x, p1y, p2x, p2y] = [...playerspositions[0], ...playerspositions[1]];
-  const vwallsSum = vwalls.reduce((sum, [x, y]) => sum + x + y, 0);
-  const hwallsSum = hwalls.reduce((sum, [x, y]) => sum + x + y, 0);
-  return `${p1x}${p1y}${p2x}${p2y}${p1walls}${p2walls}${vwallsSum}${hwallsSum}${player}`;
-}
-
-function selectRandom(array) {
-  return array[Math.floor(Math.random() * array.length)];
+  const vwalls_s = vwalls
+    .map(([x, y]) => `${x}${y}`)
+    .sort()
+    .join("");
+  const hwalls_s = hwalls
+    .map(([x, y]) => `${x}${y}`)
+    .sort()
+    .join("");
+  return `${p1x}${p1y}${p2x}${p2y}${p1walls}${p2walls}${vwalls_s}${hwalls_s}${player}`;
 }
 
 function determineDefaultMove(gameState, player) {
@@ -93,7 +74,6 @@ function minimax(
     return ttEntry;
   }
 
-  const [p1_coord, p2_coord] = gameState.playerspositions;
   const defaultMove = determineDefaultMove(
     gameState,
     maximizingPlayer ? player : opponentPlayer,
@@ -106,11 +86,7 @@ function minimax(
     ? { value: -Infinity, move: defaultMove }
     : { value: Infinity, move: defaultMove };
 
-  if (
-    depth === 0 ||
-    checkWin(1, { p1_coord, p2_coord }) ||
-    checkWin(2, { p1_coord, p2_coord })
-  ) {
+  if (depth === 0 || checkWin(gameState, 1) || checkWin(gameState, 2)) {
     const value = evaluate(
       gameState,
       maximizingPlayer ? player : opponentPlayer,
@@ -170,16 +146,31 @@ function minimax(
 }
 
 function evaluate(gameState, player, depthPenalty) {
-  const playerGoals = player === 1 ? p1goals : p2goals;
-  const opponentGoals = player === 1 ? p2goals : p1goals;
-  const [playerPosition, opponentPosition] = gameState.playerspositions;
+  const playerPosition = gameState.playerspositions[player - 1];
+  const opponentPosition = gameState.playerspositions[player === 1 ? 1 : 0];
   const opponent = player === 1 ? 2 : 1;
 
-  const { canWin: canWinPlayer, path: playerPath } = canWin(gameState, player);
-  const { canWin: canWinOpponent, path: opponentPath } = canWin(
+  let { canWin: canWinPlayer, path: playerPath } = canWin(gameState, player);
+  let { canWin: canWinOpponent, path: opponentPath } = canWin(
     gameState,
     opponent,
   );
+
+  if (playerPath.length === 0) {
+    playerPath = getShortestPath(
+      playerPosition,
+      [opponentPosition],
+      gameState,
+      player,
+    );
+  } else if (opponentPath.length === 0) {
+    opponentPath = getShortestPath(
+      opponentPosition,
+      [playerPosition],
+      gameState,
+      opponent,
+    );
+  }
 
   if (canWinPlayer) {
     return 1000000 - depthPenalty;
@@ -256,27 +247,59 @@ function evaluate(gameState, player, depthPenalty) {
 }
 
 function computeMove(gameState, player, depth = 2) {
-  const aiPlayer = player;
   const opponent = player === 1 ? 2 : 1;
   const playerWalls = player === 1 ? gameState.p1walls : gameState.p2walls;
-  const aiGoals = aiPlayer === 1 ? p1goals : p2goals;
-  const opponentGoals = opponent === 1 ? p1goals : p2goals;
-  const aiPath = getShortestPath(
-    gameState.playerspositions[aiPlayer - 1],
-    aiGoals,
-    gameState,
-    aiPlayer,
-  );
-  const opponentPath = getShortestPath(
-    gameState.playerspositions[opponent - 1],
-    opponentGoals,
+  let { canWin: canWinPlayer, path: playerPath } = canWin(gameState, player);
+  let { canWin: canWinOpponent, path: opponentPath } = canWin(
     gameState,
     opponent,
   );
 
-  if (aiPath.length <= 4 || opponentPath.length <= 4) {
-    depth = 4;
+  if (playerPath.length === 0) {
+    playerPath = getShortestPath(
+      playerPosition,
+      [opponentPosition],
+      gameState,
+      player,
+    );
+
+    if (playerPath.length === 0) {
+      return gameState.playerspositions[player - 1];
+    } else if (playerWalls === 0) {
+      return playerPath[1];
+    }
   }
+
+  if (
+    (playerPath.length > 1 &&
+      canWinPlayer &&
+      !canWinOpponent &&
+      playerWalls === 0) ||
+    playerWalls === 0
+  ) {
+    return playerPath[1];
+  } else if (
+    canWinOpponent &&
+    areGoalsInsidePath(opponentPath, player === 1 ? p2goals : p1goals)
+  ) {
+    const wallMoves = getPossibleMovesAndStrategicWalls(
+      gameState,
+      player,
+    ).possibleWalls;
+    for (let wallMove of wallMoves) {
+      const newState = applyMove(gameState, wallMove, player);
+      if (!newState) continue;
+      const { canWin: canStillWinOpponent } = canWin(
+        newState,
+        player === 1 ? 2 : 1,
+      );
+      if (!canStillWinOpponent) return wallMove;
+    }
+  }
+
+  //if (playerPath.length <= 4 || opponentPath.length <= 4) {
+  //  depth = 4;
+  //}
 
   const { move } = minimax(
     gameState,
@@ -287,19 +310,6 @@ function computeMove(gameState, player, depth = 2) {
     depth,
     player,
   );
-
-  if (move.length === 3) {
-    const gameStateAfterWall = applyMove(gameState, move, player);
-    const opponentPathAfterWall = getShortestPath(
-      gameStateAfterWall.playerspositions[opponent - 1],
-      opponentGoals,
-      gameStateAfterWall,
-      opponent,
-    );
-    if (opponentPathAfterWall.length > opponentPath.length + 2) {
-      return move;
-    }
-  }
 
   if (
     !move ||

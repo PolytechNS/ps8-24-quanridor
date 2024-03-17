@@ -1,9 +1,9 @@
-const Random = require("../random-ai.js");
+const Rulebased = require("../rulebased-ai.js");
 const Minimax = require("../minimax-ai.js");
 const MCTS = require("../mcts-ai.js");
 
 const { initializeGame } = require("../../utils/game-initializer.js");
-const { applyMove, checkWin } = require("../../utils/game-checkers.js");
+const { applyMove, checkWin, canWin } = require("../../utils/game-checkers.js");
 
 let game = initializeGame();
 
@@ -24,37 +24,44 @@ function simulateGameBetween2AI() {
     let move;
     let startTime = performance.now();
     if (game.turn % 2 === 0) {
-      move = Minimax.computeMove(game, playsAsPlayer1);
+      move = MCTS.computeMove(game, playsAsPlayer1);
       console.log("Player1 played", move);
       game = applyMove(game, move, 1);
       totalTimeP1 += performance.now() - startTime;
     } else {
-      move = MCTS.computeMove(game, playsAsPlayer2);
+      move = Minimax.computeMove(game, playsAsPlayer2);
       console.log("Player2 played", move);
       game = applyMove(game, move, 2);
       totalTimeP2 += performance.now() - startTime;
     }
+
     let endTime = performance.now();
     let elapsedTime = endTime - startTime;
-    console.log(`Le temps écoulé: ${Math.round(elapsedTime)} millisecondes`);
-    totalTime += elapsedTime;
-    if (
-      checkWin(1, {
-        p1_coord: game.playerspositions[0],
-        p2_coord: game.playerspositions[1],
-      })
-    ) {
+    console.log(`Time elapsed: ${Math.round(elapsedTime)} milliseconds`);
+
+    if (game.turn > 300) {
       console.log("\n");
       console.log(game);
       console.log("\n");
+      throw new Error("Game took too long");
+    }
+
+    if (checkWin(game, 1)) {
+      console.log("\n");
+      console.log(game);
+      console.log("\n");
+
+      let { canWin: canWinPlayer2, player2path: path } = canWin(game, 2);
+
+      if (canWinPlayer2) {
+        game = applyMove(game, path[1], 2);
+        console.log("It's a draw");
+        break;
+      }
+
       console.log("Player1 won");
       break;
-    } else if (
-      checkWin(2, {
-        p1_coord: game.playerspositions[0],
-        p2_coord: game.playerspositions[1],
-      })
-    ) {
+    } else if (checkWin(game, 2)) {
       console.log("\n");
       console.log(game);
       console.log("\n");
@@ -79,4 +86,18 @@ function simulateGameBetween2AI() {
   console.log("Turns: ", game.turn);
 }
 
-simulateGameBetween2AI();
+try {
+  simulateGameBetween2AI();
+} catch (e) {
+  console.log(e);
+  console.log("########## PASTE THIS IN MONGODB TO VISUALIZE ##########");
+  game.author = "admin";
+  game.players = ["admin", "debug"];
+  game.status = 1;
+  game.created = new Date();
+  game.board_visibility = game.board_visibility.map((row) =>
+    row.map((cell) => (cell !== 1 ? 1 : cell)),
+  );
+  // Stringify the gameobject and print it to the console so it fits 1 line
+  console.log("db.games.insertOne(" + JSON.stringify(game) + ")");
+}

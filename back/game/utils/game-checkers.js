@@ -82,35 +82,27 @@ function getPossibleWalls(gameState, player) {
 
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      if (
-        isWallLegal(
-          player,
-          [i, j],
-          "v",
-          gameState.p1walls,
-          gameState.p2walls,
-          gameState.vwalls,
-          gameState.hwalls,
-          gameState.playerspositions[0],
-          gameState.playerspositions[1],
-        )
-      ) {
-        possibleWalls.push([i, j, "v"]);
-      }
-      if (
-        isWallLegal(
-          player,
-          [i, j],
-          "h",
-          gameState.p1walls,
-          gameState.p2walls,
-          gameState.vwalls,
-          gameState.hwalls,
-          gameState.playerspositions[0],
-          gameState.playerspositions[1],
-        )
-      ) {
-        possibleWalls.push([i, j, "h"]);
+      const directions = [
+        ["v", [i, j]],
+        ["h", [i, j]],
+      ];
+
+      for (let [direction, coord] of directions) {
+        if (
+          isWallLegal(
+            player,
+            coord,
+            direction,
+            gameState.p1walls,
+            gameState.p2walls,
+            gameState.vwalls,
+            gameState.hwalls,
+            gameState.playerspositions[0],
+            gameState.playerspositions[1],
+          )
+        ) {
+          possibleWalls.push([...coord, direction]);
+        }
       }
     }
   }
@@ -125,6 +117,9 @@ function getStrategicWalls(gameState, player) {
     return [];
   }
 
+  const playerPosition = gameState.playerspositions[player - 1];
+  const opponentPosition = gameState.playerspositions[1 - (player - 1)];
+  const opponent = player === 1 ? 2 : 1;
   const playerGoals = player === 1 ? p1goals : p2goals;
   const opponentGoals = player === 1 ? p2goals : p1goals;
   const playerPath = getShortestPath(
@@ -140,32 +135,55 @@ function getStrategicWalls(gameState, player) {
     player === 1 ? 2 : 1,
   );
 
-  return possibleWalls.filter((wall) => {
-    const tempGameState = cloneGameState(gameState);
-    if (wall[2] === "v") {
-      tempGameState.vwalls.push([wall[0], wall[1]]);
-    } else {
-      tempGameState.hwalls.push([wall[0], wall[1]]);
-    }
+  return possibleWalls
+    .map((wall) => {
+      const tempGameState = cloneGameState(gameState);
+      if (wall[2] === "v") {
+        tempGameState.vwalls.push([wall[0], wall[1], "v"]);
+      } else {
+        tempGameState.hwalls.push([wall[0], wall[1], "h"]);
+      }
 
-    const newPlayerPath = getShortestPath(
-      tempGameState.playerspositions[player - 1],
-      playerGoals,
-      tempGameState,
-      player,
-    );
-    const newOpponentPath = getShortestPath(
-      tempGameState.playerspositions[1 - (player - 1)],
-      opponentGoals,
-      tempGameState,
-      player === 1 ? 2 : 1,
-    );
+      let newPlayerPath = getShortestPath(
+        tempGameState.playerspositions[player - 1],
+        playerGoals,
+        tempGameState,
+        player,
+      );
+      let newOpponentPath = getShortestPath(
+        tempGameState.playerspositions[1 - (player - 1)],
+        opponentGoals,
+        tempGameState,
+        player === 1 ? 2 : 1,
+      );
 
-    return (
-      newOpponentPath.length > opponentPath.length &&
-      newPlayerPath.length <= playerPath.length + 2
-    );
-  });
+      if (playerPath.length === 0) {
+        newPlayerPath = getShortestPath(
+          playerPosition,
+          [opponentPosition],
+          gameState,
+          player,
+        );
+      } else if (opponentPath.length === 0) {
+        newOpponentPath = getShortestPath(
+          opponentPosition,
+          [playerPosition],
+          gameState,
+          opponent,
+        );
+      }
+
+      return {
+        wall,
+        playerPathDelta: newPlayerPath.length - playerPath.length,
+        opponentPathDelta: newOpponentPath.length - opponentPath.length,
+      };
+    })
+    .filter(({ playerPathDelta, opponentPathDelta }) => {
+      return opponentPathDelta > 0 && playerPathDelta <= 2;
+    })
+    .sort((a, b) => b.opponentPathDelta - a.opponentPathDelta)
+    .map(({ wall }) => wall);
 }
 
 function cloneGameState(gameState) {
@@ -330,7 +348,12 @@ function canWin(gameState, player) {
     gameState,
     player,
   );
-  return { canWin: playerPath.length <= 2, path: playerPath };
+  return {
+    canWin:
+      playerPath.length === 2 &&
+      areGoalsInsidePath(player === 1 ? p1goals : p2goals, playerPath),
+    path: playerPath,
+  };
 }
 
 function getPlayerNeighbour(coord) {
@@ -415,12 +438,19 @@ function getShortestPath(start, goals, gameState, player) {
     return totalPath;
   }
 
+  const originalPosition = [...gameState.playerspositions[player - 1]];
+
   while (queue.length > 0) {
     let current = queue.shift();
+
+    // Mettre à jour temporairement la position du joueur dans gameState
+    gameState.playerspositions[player - 1] = current;
 
     // Vérifier si le but est atteint
     for (let goal of goals) {
       if (current[0] === goal[0] && current[1] === goal[1]) {
+        // Remettre la position d'origine du joueur dans gameState avant de retourner le chemin
+        gameState.playerspositions[player - 1] = originalPosition;
         return reconstructPath(cameFrom, current);
       }
     }
@@ -437,6 +467,8 @@ function getShortestPath(start, goals, gameState, player) {
     }
   }
 
+  // Remettre la position d'origine du joueur dans gameState avant de retourner un chemin vide
+  gameState.playerspositions[player - 1] = originalPosition;
   return []; // Aucun chemin trouvé
 }
 
@@ -493,7 +525,9 @@ function isWallLegal(
   return isPossible;
 }
 
-function checkWin(player, { p1_coord, p2_coord }) {
+function checkWin(gameState, player) {
+  const p1_coord = gameState.playerspositions[0];
+  const p2_coord = gameState.playerspositions[1];
   return (
     (player === 1 && p1_coord[1] === 0) || (player === 2 && p2_coord[1] === 8)
   );
@@ -501,7 +535,6 @@ function checkWin(player, { p1_coord, p2_coord }) {
 
 function applyMove(gameState, move, player) {
   const newGameState = cloneGameState(gameState);
-
   if (move.length === 3) {
     const wallsnum = player === 1 ? newGameState.p1walls : newGameState.p2walls;
     if (wallsnum <= 0) {
@@ -553,6 +586,23 @@ function areGoalsInsidePath(goals, path) {
   return goals.some((goal) => pathSet.has(JSON.stringify(goal)));
 }
 
+function getManhattanDistance(pos, goals) {
+  return Math.min(
+    ...goals.map(
+      (goal) => Math.abs(pos[0] - goal[0]) + Math.abs(pos[1] - goal[1]),
+    ),
+  );
+}
+
+function getPawnDistance(p1pos, p2pos, state) {
+  return getShortestPath(p1pos, [p2pos], state, 1).length - 1;
+}
+
+function isOnGoalSide(pos, state) {
+  const middleRow = 4;
+  return state.turn % 2 === 0 ? pos[1] <= middleRow : pos[1] >= middleRow;
+}
+
 module.exports = {
   isLegal,
   canJump,
@@ -569,4 +619,10 @@ module.exports = {
   getNextMoveToFollowShortestPath,
   areGoalsInsidePath,
   getPlayerNeighbour,
+  getManhattanDistance,
+  getPawnDistance,
+  getStrategicWalls,
+  isOnGoalSide,
+  p1goals,
+  p2goals,
 };
