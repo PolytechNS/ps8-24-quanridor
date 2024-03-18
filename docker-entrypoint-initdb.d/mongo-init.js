@@ -20,6 +20,7 @@ db.users.insertOne({
   password: "$2b$10$n9CCIS8IkSm7NQgUrfn3f.gNElHGHN3HwVJUKkphnLF1jHo1viVC2",
   admin: true,
   elo: 800,
+  friends: [],
 });
 
 db.createCollection("secrets");
