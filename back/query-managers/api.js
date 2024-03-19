@@ -56,6 +56,7 @@ async function manageRequest(request, response) {
     ) {
       handleLogin(request, response);
     } else {
+      console.log("No token found in headers");
       response.writeHead(404, { "Content-Type": "application/json" });
       response.end(
         JSON.stringify({
@@ -74,13 +75,32 @@ async function manageRequest(request, response) {
       return;
     }
 
-    if (normalizedPath === `${apiPath}/game` && request.method === "GET") {
+    // Social
+    if (
+      normalizedPath === `${apiPath}/notifications` &&
+      request.method === "GET"
+    ) {
+      handleNotificationsGet(request, response, decodedToken);
+    } else if (
+      normalizedPath === `${apiPath}/notifications/markAsRead` &&
+      request.method === "PUT"
+    ) {
+      handleNotificationsMarkAsRead(request, response, decodedToken);
+    }
+
+    // Game
+    else if (normalizedPath === `${apiPath}/game` && request.method === "GET") {
       handleGameGet(request, response, decodedToken);
     } else if (
       normalizedPath === `${apiPath}/users` &&
       request.method === "GET"
     ) {
       handleUsersGet(request, response, decodedToken);
+    } else if (
+      normalizedPath.startsWith(`${apiPath}/users/`) &&
+      request.method === "GET"
+    ) {
+      handleUserGet(request, response, decodedToken);
     } else {
       response.writeHead(404, { "Content-Type": "application/json" });
       response.end(
@@ -134,6 +154,7 @@ async function handleSignup(request, response) {
         password: hashedPassword,
         elo: DEFAULT_ELO,
         admin: false,
+        friends: [],
       });
 
       // Get secret from secrets collection in MongoDB where the field "jwt" is the secret
@@ -172,7 +193,7 @@ async function handleLogin(request, response) {
       if (!user) {
         response.writeHead(401, { "Content-Type": "application/json" });
         response.end(JSON.stringify({ message: "User not found" }));
-        return;
+        return; // S'assure que la fonction s'arrête ici si l'utilisateur n'existe pas
       }
 
       // Vérifier si le mot de passe est correct
@@ -180,13 +201,11 @@ async function handleLogin(request, response) {
       if (!match) {
         response.writeHead(401, { "Content-Type": "application/json" });
         response.end(JSON.stringify({ message: "Invalid password" }));
-        return;
+        return; // S'assure que la fonction s'arrête ici si le mot de passe ne correspond pas
       }
 
-      // Get secret from secrets collection in MongoDB where the field "jwt" is the secret
+      // Générer le JWT
       let secret = await getJwtSecret();
-
-      // Generate JWT
       const token = jwt.sign({ username }, secret, { expiresIn: "90d" });
 
       response.writeHead(200, { "Content-Type": "application/json" });
@@ -239,21 +258,143 @@ async function handleUsersGet(request, response, decodedToken) {
         }
 
         response.writeHead(200, { "Content-Type": "application/json" });
+
         response.end(
-          JSON.stringify({ username: otherUser.username, elo: otherUser.elo }),
+          JSON.stringify({
+            _id: otherUser._id.toString(),
+            username: otherUser.username,
+            elo: otherUser.elo,
+            friends: otherUser.friends,
+          }),
         );
         return;
       }
 
       // Return every information about the user except the password
       response.writeHead(200, { "Content-Type": "application/json" });
-      response.end(JSON.stringify({ username: user.username, elo: user.elo })); // For now, we have nothing more...
+      response.end(
+        JSON.stringify({
+          _id: user._id.toString(),
+          username: user.username,
+          elo: user.elo,
+          friends: user.friends,
+        }),
+      );
     } catch (e) {
       console.error("Error in handleUsersGet:", e);
       response.writeHead(400, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ message: "Failed to retrieve user" }));
     }
   });
+}
+
+async function handleUserGet(request, response, decodedToken) {
+  addCors(response, ["GET"]);
+
+  const parsedUrl = url.parse(request.url, true);
+  const userId = parsedUrl.pathname.split("/").pop();
+
+  try {
+    const db = getDB();
+    const users = db.collection("users");
+
+    const username = decodedToken.username;
+    const user = await users.findOne({ username });
+
+    if (!user) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    const otherUser = await users.findOne({ _id: new ObjectId(userId) });
+    if (!otherUser) {
+      response.writeHead(404, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not found" }));
+      return;
+    }
+
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(
+      JSON.stringify({
+        _id: otherUser._id.toString(),
+        username: otherUser.username,
+        elo: otherUser.elo,
+      }),
+    );
+  } catch (e) {
+    console.error("Error in handleUserGet:", e);
+    response.writeHead(400, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ message: "Failed to retrieve user" }));
+  }
+}
+
+// ------------------------------ FRIENDS HANDLING ------------------------------
+
+async function handleNotificationsGet(request, response, decodedToken) {
+  addCors(response, ["GET"]);
+
+  try {
+    const db = getDB();
+    const notifications = db.collection("notifications");
+    const username = decodedToken.username;
+    const users = db.collection("users");
+    const user = await users.findOne({ username });
+
+    if (!user) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    const unreadNotifications = await notifications
+      .find({ to: user._id, read: false })
+      .toArray();
+
+    response.end(JSON.stringify(unreadNotifications));
+  } catch (e) {
+    console.error("Error in handleNotificationsGet:", e);
+    if (!response.headersSent) {
+      response.writeHead(400, { "Content-Type": "application/json" });
+      response.end(
+        JSON.stringify({ message: "Failed to retrieve notifications" }),
+      );
+    }
+  }
+}
+
+async function handleNotificationsMarkAsRead(request, response, decodedToken) {
+  addCors(response, ["PUT"]);
+
+  try {
+    const db = getDB();
+    const notifications = db.collection("notifications");
+    const username = decodedToken.username;
+    const users = db.collection("users");
+    const user = await users.findOne({ username });
+
+    if (!user) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    await notifications.updateMany(
+      { to: user._id, read: false },
+      { $set: { read: true } },
+    );
+
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ message: "Notifications marked as read" }));
+  } catch (e) {
+    console.error("Error in handleNotificationsMarkAsRead:", e);
+    if (!response.headersSent) {
+      response.writeHead(400, { "Content-Type": "application/json" });
+      response.end(
+        JSON.stringify({ message: "Failed to mark notifications as read" }),
+      );
+    }
+  }
 }
 
 // ------------------------------ GAME HANDLING ------------------------------

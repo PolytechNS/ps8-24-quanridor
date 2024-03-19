@@ -14,11 +14,9 @@ const {
   getNextMoveToFollowShortestPath,
 } = require("../utils/game-checkers.js");
 
-function createSocket(server) {
+function createSocketGame(io) {
   let waitingPlayer = null;
   const rooms = {};
-  const io = new Server(server);
-
   const gameNamespace = io.of("/api/game");
   gameNamespace.on("connection", (socket) => {
     socket.on("createGameAI", async (data) => {
@@ -447,4 +445,4 @@ function createSocket(server) {
   return io;
 }
 
-module.exports = createSocket;
+module.exports = createSocketGame;
