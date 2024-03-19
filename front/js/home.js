@@ -19,6 +19,9 @@ const unfriendIcon = document.getElementById("unfriend");
 const removeFriendContainer = document.getElementById("remove-friend");
 const keepFriendButton = document.getElementById("normal-button");
 const removeFriendButton = document.getElementById("careful-button");
+const messageCountList = document.getElementsByClassName(
+  "unread-message-count",
+);
 
 let notificationCount = 0;
 
@@ -33,9 +36,17 @@ function incrementNotificationCount() {
 // For demonstration purposes, I'm simulating a new notification every 3 seconds
 /*setInterval(function() {
   incrementNotificationCount();
+  incrementMessageCount();
   displaySideNotification('New Notification', 'You have a new notification');
-}, 3000);
-*/
+}, 3000);*/
+
+function incrementMessageCount() {
+  for (let i = 0; i < messageCountList.length; i++) {
+    messageCountList[i].textContent =
+      parseInt(messageCountList[i].textContent) + 1;
+    messageCountList[i].style.display = "block";
+  }
+}
 
 function displaySideNotification(title, message) {
   sideNotification.style.display = "block";
@@ -80,6 +91,8 @@ friendsContainer.addEventListener("click", (event) => {
 
   if (!clickedElement || !friendsContainer.contains(clickedElement)) return;
 
+  clickedElement.querySelector(".unread-message-count").style.display = "none";
+  clickedElement.querySelector(".unread-message-count").textContent = "0";
   toggleRemoveFriend(true);
 
   if (currentSelectedFriendContainer !== null) {
@@ -87,7 +100,7 @@ friendsContainer.addEventListener("click", (event) => {
       this.style.backgroundColor = "rgb(28, 32, 67)";
     };
     currentSelectedFriendContainer.onmouseout = function () {
-      this.style.backgroundColor = "rgba(1, 5, 37, 1)"; // Restore original color when not hovering
+      this.style.backgroundColor = "rgba(1, 5, 37, 1)";
     };
     currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
   }
