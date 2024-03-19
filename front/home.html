@@ -63,18 +63,27 @@
         </div>
       </div>
       <div id="friend-profile">
-        <div class="vertical-small-container">
-          <svg id="user"></svg>
-          <div class="big-activity" id="inactive">
-            <span class="tooltiptext">Active</span>
-          </div>
-          <h1 class="text" id="selected-friend-profile-name">Unknown</h1>
-          <div class="friend-footer">
-            <div class="horizontal-small-container">
-              <svg id="unfriend"></svg> <svg id="chat"></svg>
-              <svg id="play"></svg>
+        <div id="profile-container">
+          <div class="vertical-small-container">
+            <svg id="user"></svg>
+            <div class="big-activity" id="inactive">
+              <span class="tooltiptext">Active</span>
+            </div>
+            <h1 class="text" id="selected-friend-profile-name">Unknown</h1>
+            <div class="friend-footer">
+              <div class="horizontal-small-container">
+                <svg id="unfriend"></svg> <svg id="chat"></svg>
+                <svg id="play"></svg>
+              </div>
             </div>
           </div>
+        </div>
+        <div id="remove-friend">
+          <div class="text">Remove friend?</div>
+          <div class="horizontal-small-container">
+          <button class="choice-button" id="normal-button">Keep</button>
+          <button class="choice-button" id="careful-button">Remove</button>
+        </div>
         </div>
       </div>
       <div class="vertical-container">

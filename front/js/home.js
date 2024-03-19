@@ -15,6 +15,10 @@ const searchHeader = document.getElementById("friend-search");
 const friendButtons = document.getElementById("friend-buttons");
 const searchButton = document.getElementById("search");
 const friendSearchBar = document.getElementById("search-input");
+const unfriendIcon = document.getElementById("unfriend");
+const removeFriendContainer = document.getElementById("remove-friend");
+const keepFriendButton = document.getElementById("normal-button");
+const removeFriendButton = document.getElementById("careful-button");
 
 let notificationCount = 0;
 
@@ -76,6 +80,8 @@ friendsContainer.addEventListener("click", (event) => {
 
   if (!clickedElement || !friendsContainer.contains(clickedElement)) return;
 
+  toggleRemoveFriend(true);
+
   if (currentSelectedFriendContainer !== null) {
     currentSelectedFriendContainer.onmouseover = function () {
       this.style.backgroundColor = "rgb(28, 32, 67)";
@@ -99,7 +105,7 @@ friendsContainer.addEventListener("click", (event) => {
   currentSelectedFriendContainer.onmouseout = null;
 
   friendProfile.style.display =
-    currentSelectedFriendContainer == null ? "none" : "block";
+    currentSelectedFriendContainer == null ? "none" : "flex";
   friendProfile.querySelector(".text").textContent =
     clickedElement.querySelector(".text").textContent;
   friendProfile.querySelector(".big-activity").id =
@@ -163,3 +169,29 @@ function changeTooltipText() {
       toolTipTexts[i].parentNode.id === "active" ? "Active" : "Inactive";
   }
 }
+
+unfriendIcon.addEventListener("click", function () {
+  toggleRemoveFriend();
+});
+
+function toggleRemoveFriend(hide = false) {
+  unfriendIcon.style.filter =
+    unfriendIcon.style.filter === "invert(1)" ? "invert(0)" : "invert(1)";
+  removeFriendContainer.style.display =
+    removeFriendContainer.style.display === "flex" ? "none" : "flex";
+
+  if (hide) {
+    removeFriendContainer.style.display = "none";
+    unfriendIcon.style.filter = "invert(0)";
+  }
+}
+
+keepFriendButton.addEventListener("click", function () {
+  toggleRemoveFriend(true);
+});
+
+removeFriendButton.addEventListener("click", function () {
+  toggleRemoveFriend(true);
+  friendProfile.style.display = "none";
+  currentSelectedFriendContainer.style.display = "none";
+});
