@@ -8,8 +8,13 @@ const friendProfile = document.getElementById("friend-profile");
 const chatButton = document.getElementById("chat");
 const friendList = document.getElementById("friend-list");
 const friendChat = document.getElementById("friend-chat");
-const closeChatButton = document.getElementById("small-back-arrow");
+const closeChatButton = document.getElementById("close-chat");
+const closeSearchButton = document.getElementById("close-search");
 const toolTipTexts = document.getElementsByClassName("tooltiptext");
+const searchHeader = document.getElementById("friend-search");
+const friendButtons = document.getElementById("friend-buttons");
+const searchButton = document.getElementById("search");
+const friendSearchBar = document.getElementById("search-input");
 
 let notificationCount = 0;
 
@@ -139,6 +144,17 @@ closeChatButton.addEventListener("click", function () {
   friendList.style.display = "block";
   currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
   currentSelectedFriendContainer = null;
+});
+
+closeSearchButton.addEventListener("click", function () {
+  searchHeader.style.display = "none";
+  friendButtons.style.display = "flex";
+});
+
+searchButton.addEventListener("click", function () {
+  friendButtons.style.display = "none";
+  searchHeader.style.display = "flex";
+  friendSearchBar.focus();
 });
 
 function changeTooltipText() {
