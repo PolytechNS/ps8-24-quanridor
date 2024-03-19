@@ -245,8 +245,10 @@ async function handleUsersGet(request, response, decodedToken) {
         }
 
         response.writeHead(200, { "Content-Type": "application/json" });
+
         response.end(
           JSON.stringify({
+            _id: otherUser._id.toString(),
             username: otherUser.username,
             elo: otherUser.elo,
             friends: otherUser.friends,
@@ -259,6 +261,7 @@ async function handleUsersGet(request, response, decodedToken) {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(
         JSON.stringify({
+          _id: user._id.toString(),
           username: user.username,
           elo: user.elo,
           friends: user.friends,
@@ -300,7 +303,11 @@ async function handleUserGet(request, response, decodedToken) {
 
     response.writeHead(200, { "Content-Type": "application/json" });
     response.end(
-      JSON.stringify({ username: otherUser.username, elo: otherUser.elo }),
+      JSON.stringify({
+        _id: otherUser._id.toString(),
+        username: otherUser.username,
+        elo: otherUser.elo,
+      }),
     );
   } catch (e) {
     console.error("Error in handleUserGet:", e);
