@@ -72,6 +72,12 @@ friendsContainer.addEventListener("click", (event) => {
   if (!clickedElement || !friendsContainer.contains(clickedElement)) return;
 
   if (currentSelectedFriendContainer !== null) {
+    currentSelectedFriendContainer.onmouseover = function () {
+      this.style.backgroundColor = "rgb(28, 32, 67)";
+    };
+    currentSelectedFriendContainer.onmouseout = function () {
+      this.style.backgroundColor = "rgba(1, 5, 37, 1)"; // Restore original color when not hovering
+    };
     currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
   }
 
@@ -83,6 +89,10 @@ friendsContainer.addEventListener("click", (event) => {
 
   currentSelectedFriendContainer = clickedElement;
   currentSelectedFriendContainer.style.backgroundColor = "#4650A8";
+
+  currentSelectedFriendContainer.onmouseover = null;
+  currentSelectedFriendContainer.onmouseout = null;
+
   friendProfile.style.display =
     currentSelectedFriendContainer == null ? "none" : "block";
   friendProfile.querySelector(".text").textContent =
