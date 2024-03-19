@@ -20,6 +20,16 @@
             </div>
             <div class="scrollbar-friend-content">
               <div class="friends">
+                <div class="friend-container">
+                  <svg id="small-user"></svg>
+                  <div class="small-activity" id="inactive"></div>
+                  <div class="text">friend1</div>
+                </div>
+                <div class="friend-container">
+                  <svg id="small-user"></svg>
+                  <div class="small-activity" id="active"></div>
+                  <div class="text">friend2</div>
+                </div>
                 <!-- Les vrais amis seront insérés ici dynamiquement -->
               </div>
             </div>
@@ -51,6 +61,9 @@
       <div id="friend-profile">
         <div class="vertical-small-container">
           <svg id="user"></svg>
+          <div class="big-activity" id="inactive">
+            <span class="tooltiptext">Active</span>
+          </div>
           <h1 class="text" id="selected-friend-profile-name"></h1>
           <div class="friend-footer">
             <div class="horizontal-small-container">

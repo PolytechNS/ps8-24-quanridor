@@ -9,6 +9,7 @@ const chatButton = document.getElementById("chat");
 const friendList = document.getElementById("friend-list");
 const friendChat = document.getElementById("friend-chat");
 const closeChatButton = document.getElementById("small-back-arrow");
+const toolTipTexts = document.getElementsByClassName("tooltiptext");
 
 let notificationCount = 0;
 
@@ -86,6 +87,9 @@ friendsContainer.addEventListener("click", (event) => {
     currentSelectedFriendContainer == null ? "none" : "block";
   friendProfile.querySelector(".text").textContent =
     clickedElement.querySelector(".text").textContent;
+  friendProfile.querySelector(".big-activity").id =
+    clickedElement.querySelector(".small-activity").id;
+  changeTooltipText();
 });
 
 sideNotification.addEventListener("click", (event) => {
@@ -126,3 +130,10 @@ closeChatButton.addEventListener("click", function () {
   currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
   currentSelectedFriendContainer = null;
 });
+
+function changeTooltipText() {
+  for (let i = 0; i < toolTipTexts.length; i++) {
+    toolTipTexts[i].textContent =
+      toolTipTexts[i].parentNode.id === "active" ? "Active" : "Inactive";
+  }
+}
