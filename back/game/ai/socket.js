@@ -623,7 +623,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "playing" } },
+        { $set: { activity: "inactive" } },
       );
       gameNamespace.to(data.roomId).emit("opponentLeave");
     });
@@ -637,7 +637,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "playing" } },
+        { $set: { activity: "inactive" } },
       );
       gameNamespace.to(data.roomId).emit("opponentLeave");
     });
