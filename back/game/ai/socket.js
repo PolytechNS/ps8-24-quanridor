@@ -395,7 +395,6 @@ function createSocketGame(io) {
 
         waitingPlayer = null;
       } else {
-        console.log("waiting");
         waitingPlayer = socket;
         socket.emit("waiting");
       }
@@ -586,9 +585,9 @@ function createSocketGame(io) {
           gameState.playerspositions[1],
         )
       ) {
-        socket.emit("illegal");
+        gameNamespace.to(data.roomId).emit("illegal");
       } else {
-        socket.emit("player1WallIsLegal", data.wall);
+        gameNamespace.to(data.roomId).emit("player1WallIsLegal", data.wall);
       }
     });
 
@@ -609,10 +608,44 @@ function createSocketGame(io) {
           gameState.playerspositions[1],
         )
       ) {
-        socket.emit("illegal");
+        gameNamespace.to(data.roomId).emit("illegal");
       } else {
-        socket.emit("player2WallIsLegal", data.wall);
+        gameNamespace.to(data.roomId).emit("player2WallIsLegal", data.wall);
       }
+    });
+
+    socket.on("player1Leave", async (data) => {
+      waitingPlayer = null;
+      const db = getDB();
+      const users = db.collection("users");
+
+      const user = await users.findOne({ username: data.username });
+
+      let userId = user._id;
+      await users.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { activity: "inactive" } },
+      );
+      gameNamespace.to(data.roomId).emit("opponentLeave");
+    });
+
+    socket.on("player2Leave", async (data) => {
+      waitingPlayer = null;
+      const db = getDB();
+      const users = db.collection("users");
+
+      const user = await users.findOne({ username: data.username });
+
+      let userId = user._id;
+      await users.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { activity: "inactive" } },
+      );
+      gameNamespace.to(data.roomId).emit("opponentLeave");
+    });
+
+    socket.on("leaveWhileSearching", () => {
+      waitingPlayer = null;
     });
   });
 
