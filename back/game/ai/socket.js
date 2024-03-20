@@ -615,6 +615,7 @@ function createSocketGame(io) {
     });
 
     socket.on("player1Leave", async (data) => {
+      waitingPlayer = null;
       const db = getDB();
       const users = db.collection("users");
 
@@ -629,6 +630,7 @@ function createSocketGame(io) {
     });
 
     socket.on("player2Leave", async (data) => {
+      waitingPlayer = null;
       const db = getDB();
       const users = db.collection("users");
 
@@ -640,6 +642,10 @@ function createSocketGame(io) {
         { $set: { activity: "inactive" } },
       );
       gameNamespace.to(data.roomId).emit("opponentLeave");
+    });
+
+    socket.on("leaveWhileSearching", () => {
+      waitingPlayer = null;
     });
   });
 
