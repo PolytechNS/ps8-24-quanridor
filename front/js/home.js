@@ -8,7 +8,19 @@ const friendProfile = document.getElementById("friend-profile");
 const chatButton = document.getElementById("chat");
 const friendList = document.getElementById("friend-list");
 const friendChat = document.getElementById("friend-chat");
-const closeChatButton = document.getElementById("small-back-arrow");
+const closeChatButton = document.getElementById("close-chat");
+const searchHeader = document.getElementById("friend-search");
+const friendButtons = document.getElementById("friend-buttons");
+const searchButton = document.getElementById("search");
+const friendSearchBar = document.getElementById("search-input");
+const closeSearchButton = document.getElementById("close-search");
+const messageCountList = document.getElementsByClassName(
+  "unread-message-count",
+);
+const unfriendIcon = document.getElementById("unfriend");
+const removeFriendContainer = document.getElementById("remove-friend");
+const keepFriendButton = document.getElementById("normal-button");
+const removeFriendButton = document.getElementById("careful-button");
 
 let notificationCount = 0;
 
@@ -30,11 +42,35 @@ function updateNotificationDisplay() {
 }, 3000);
 */
 
+function incrementMessageCount(friendId) {
+  notificationCount++;
+  updateNotificationDisplay();
+  const friendContainer = document.querySelector(
+    `[data-friendid="${friendId}"]`,
+  );
+  const unreadMessageCount = friendContainer.querySelector(
+    ".unread-message-count",
+  );
+  unreadMessageCount.textContent = parseInt(unreadMessageCount.textContent) + 1;
+  unreadMessageCount.style.display = "block";
+}
+
 function displaySideNotification(title, message) {
   sideNotification.style.display = "block";
   sideNotification.querySelector(".notification").textContent = title;
   sideNotification.querySelector(".notification-content").textContent = message;
 }
+
+closeSearchButton.addEventListener("click", function () {
+  searchHeader.style.display = "none";
+  friendButtons.style.display = "flex";
+});
+
+searchButton.addEventListener("click", function () {
+  friendButtons.style.display = "none";
+  searchHeader.style.display = "flex";
+  friendSearchBar.focus();
+});
 
 bellIcon.addEventListener("click", () => {
   togglePopup();
@@ -73,7 +109,15 @@ friendsContainer.addEventListener("click", (event) => {
 
   if (!clickedElement || !friendsContainer.contains(clickedElement)) return;
 
+  toggleRemoveFriend(true);
+
   if (currentSelectedFriendContainer !== null) {
+    currentSelectedFriendContainer.onmouseover = function () {
+      this.style.backgroundColor = "rgb(28, 32, 67)";
+    };
+    currentSelectedFriendContainer.onmouseout = function () {
+      this.style.backgroundColor = "rgba(1, 5, 37, 1)"; // Restore original color when not hovering
+    };
     currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
   }
 
@@ -85,8 +129,12 @@ friendsContainer.addEventListener("click", (event) => {
 
   currentSelectedFriendContainer = clickedElement;
   currentSelectedFriendContainer.style.backgroundColor = "#4650A8";
+
+  currentSelectedFriendContainer.onmouseover = null;
+  currentSelectedFriendContainer.onmouseout = null;
+
   friendProfile.style.display =
-    currentSelectedFriendContainer == null ? "none" : "block";
+    currentSelectedFriendContainer == null ? "none" : "flex";
   friendProfile.querySelector(".text").textContent =
     clickedElement.querySelector(".text").textContent;
 });
@@ -127,5 +175,35 @@ closeChatButton.addEventListener("click", function () {
   friendChat.style.display = "none";
   friendList.style.display = "block";
   currentSelectedFriendContainer.style.backgroundColor = "rgba(1, 5, 37, 1)";
+
+  if (currentSelectedFriendContainer !== null) {
+    currentSelectedFriendContainer.querySelector(
+      ".unread-message-count",
+    ).style.display = "none";
+    currentSelectedFriendContainer.querySelector(
+      ".unread-message-count",
+    ).textContent = "0";
+  }
+
   currentSelectedFriendContainer = null;
+});
+
+unfriendIcon.addEventListener("click", function () {
+  toggleRemoveFriend();
+});
+
+function toggleRemoveFriend(hide = false) {
+  unfriendIcon.style.filter =
+    unfriendIcon.style.filter === "invert(1)" ? "invert(0)" : "invert(1)";
+  removeFriendContainer.style.display =
+    removeFriendContainer.style.display === "flex" ? "none" : "flex";
+
+  if (hide) {
+    removeFriendContainer.style.display = "none";
+    unfriendIcon.style.filter = "invert(0)";
+  }
+}
+
+keepFriendButton.addEventListener("click", function () {
+  toggleRemoveFriend(true);
 });
