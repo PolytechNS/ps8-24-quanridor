@@ -12,6 +12,8 @@ const {
   checkWin,
   isWallLegal,
   getNextMoveToFollowShortestPath,
+  getPossibleMoves,
+  getPossibleWalls,
 } = require("../utils/game-checkers.js");
 
 function createSocketGame(io) {
@@ -473,6 +475,46 @@ function createSocketGame(io) {
       gameNamespace.to(data.roomId).emit("timeIsUp");
     });
 
+    socket.on("timeIsUpForPlayer2", (data) => {
+      let gameState = data.gameState;
+      let possibleMoves = getPossibleMoves(
+        gameState,
+        gameState.playerspositions[1],
+        2,
+      );
+      let possibleWalls = getPossibleWalls(gameState, 2);
+      possibleMoves = possibleMoves.concat(possibleWalls);
+      let move =
+        possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+      if (move.length == 0) {
+        gameNamespace.to(data.roomId).emit("timeIsUp");
+      } else if (move.length == 2) {
+        gameNamespace.to(data.roomId).emit("player2MoveIsLegal", move);
+      } else {
+        gameNamespace.to(data.roomId).emit("player2WallIsLegal", move);
+      }
+    });
+
+    socket.on("timeIsUpForPlayer1", (data) => {
+      let gameState = data.gameState;
+      let possibleMoves = getPossibleMoves(
+        gameState,
+        gameState.playerspositions[0],
+        1,
+      );
+      let possibleWalls = getPossibleWalls(gameState, 1);
+      possibleMoves = possibleMoves.concat(possibleWalls);
+      let move =
+        possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+      if (move.length == 0) {
+        gameNamespace.to(data.roomId).emit("timeIsUp");
+      } else if (move.length == 2) {
+        gameNamespace.to(data.roomId).emit("player1MoveIsLegal", move);
+      } else {
+        gameNamespace.to(data.roomId).emit("player1WallIsLegal", move);
+      }
+    });
+
     socket.on("isPlayer1MoveLegal", (data) => {
       let gameState = data.gameState;
       let newCoord = data.newCoord;
@@ -528,8 +570,8 @@ function createSocketGame(io) {
     });
 
     socket.on("isPlayer1WallLegal", (data) => {
-      let temp_wall = data.wall;
-      let current_direction = data.currentDirection;
+      let temp_wall = [data.wall[0], data.wall[1]];
+      let current_direction = data.wall[2];
       let gameState = data.gameState;
       if (
         !isWallLegal(
@@ -546,13 +588,13 @@ function createSocketGame(io) {
       ) {
         socket.emit("illegal");
       } else {
-        socket.emit("player1WallIsLegal", temp_wall);
+        socket.emit("player1WallIsLegal", data.wall);
       }
     });
 
     socket.on("isPlayer2WallLegal", (data) => {
-      let temp_wall = data.wall;
-      let current_direction = data.currentDirection;
+      let temp_wall = [data.wall[0], data.wall[1]];
+      let current_direction = data.wall[2];
       let gameState = data.gameState;
       if (
         !isWallLegal(
@@ -569,7 +611,7 @@ function createSocketGame(io) {
       ) {
         socket.emit("illegal");
       } else {
-        socket.emit("player2WallIsLegal", temp_wall);
+        socket.emit("player2WallIsLegal", data.wall);
       }
     });
   });
