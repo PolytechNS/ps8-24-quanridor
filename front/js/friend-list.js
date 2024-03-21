@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function () {
   socket.on("messageHistory", function (messages) {
     const messageList = document.getElementById("message-list");
     messageList.innerHTML =
-      '<div class="date">Let\'s start chatting!</div><br />'; // Vider la liste des messages
+      '<div class="pink-text">Let\'s start chatting!</div><br />'; // Vider la liste des messages
 
     messages.forEach((message) => {
       addMessageToChat(message, message.from !== currentUserId);
@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
           notificationsContainer.appendChild(noNotificationsMessage);
         } else {
           const dateElement = document.createElement("p");
-          dateElement.classList.add("date");
+          dateElement.classList.add("pink-text");
           dateElement.textContent = new Date().toLocaleString([], {
             weekday: "short",
             hour: "2-digit",
@@ -332,6 +332,9 @@ document.addEventListener("DOMContentLoaded", function () {
           notificationsContainer.appendChild(dateElement);
 
           notifications.forEach((notification) => {
+            // ICI, GERER LE CAS OU LA NOTIFICATION.TYPE === friendRequest pour lui ajouter un bouton accepter/refuser
+            // ET UN EVENT LISTENER acceptFriendRequest(notification._id) et sinon cacher la notification
+
             const notificationContainer = document.createElement("div");
             notificationContainer.classList.add("notification-container");
 
@@ -442,6 +445,95 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error removing friend:", error);
       });
   });
+
+  sendFriendRequestButton.addEventListener("click", function () {
+    const friendUsername = addFriendInput.value.trim();
+    sendFriendRequest(friendUsername);
+  });
+
+  function sendFriendRequest(friendUsername) {
+    const token = localStorage.getItem("token");
+
+    fetch(`${baseUrl}/api/friendRequest`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ friendUsername }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(JSON.stringify(data));
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Friend request sent successfully");
+        const feedbackElement = document.getElementById("friend-request-sent");
+        feedbackElement.style.display = "block";
+        setTimeout(() => {
+          feedbackElement.style.display = "none";
+        }, 3000);
+        addFriendInput.value = "";
+        sendFriendRequestButton.setAttribute("disabled", "disabled");
+      })
+      .catch((error) => {
+        console.error("Error sending friend request:", error);
+        const errorData = JSON.parse(error.message);
+        console.log("message:", errorData.message);
+        console.log("specific:", errorData.specific);
+        let feedbackElementId;
+        if (errorData.specific !== undefined) {
+          if (errorData.specific === 0) {
+            feedbackElementId = "couldnt-find-user";
+          } else if (errorData.specific === 1) {
+            feedbackElementId = "cant-add-yourself";
+          } else if (errorData.specific === 2) {
+            feedbackElementId = "already-friends";
+          } else if (errorData.specific === 3) {
+            feedbackElementId = "friend-request-already-sent";
+          } else {
+            feedbackElementId = "unexpected-error";
+          }
+        } else {
+          feedbackElementId = "unexpected-error";
+        }
+        const feedbackElement = document.getElementById(feedbackElementId);
+        feedbackElement.style.display = "block";
+        setTimeout(() => {
+          feedbackElement.style.display = "none";
+        }, 3000);
+      });
+  }
+
+  function acceptFriendRequest(notificationId) {
+    const token = localStorage.getItem("token");
+
+    fetch(`${baseUrl}/api/friendRequest/${notificationId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Friend request accepted successfully");
+        // TODO: Mettre à jour la liste des amis après l'acceptation de la demande
+        fetchFriendList();
+      })
+      .catch((error) => {
+        console.error("Error accepting friend request:", error);
+      });
+  }
 });
 
 function addMessageToChat(message, isFromFriend) {
@@ -451,6 +543,10 @@ function addMessageToChat(message, isFromFriend) {
 
   if (isFromFriend) {
     messageElement.style.flexDirection = "row-reverse";
+    messageElement.style.marginRight = "auto";
+  } else {
+    messageElement.style.flexDirection = "row";
+    messageElement.style.marginLeft = "auto";
   }
 
   const messageContainer = document.createElement("div");
