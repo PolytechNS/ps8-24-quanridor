@@ -33,7 +33,6 @@ svg {
   display: flex;
   justify-content: center;
   align-items: center;
-  filter: drop-shadow(6px 6px 4px #111430);
   transition:
     width 0.3s ease,
     height 0.3s ease;
@@ -1328,4 +1327,8 @@ canvas {
   filter:brightness(.5);
   cursor: none;
   pointer-events: none;
+}
+
+svg#close-arrow {
+  filter: none !important;
 }
