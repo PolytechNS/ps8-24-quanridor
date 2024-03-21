@@ -315,12 +315,12 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then((notifications) => {
         const notificationsContainer = document.querySelector(".notifications");
-        notificationsContainer.innerHTML = ""; // Clear existing notifications
+        //notificationsContainer.innerHTML = ""; // Clear existing notifications
 
         if (notifications.length === 0) {
           const noNotificationsMessage = document.createElement("p");
           noNotificationsMessage.textContent = "No unread notifications";
-          notificationsContainer.appendChild(noNotificationsMessage);
+          //notificationsContainer.appendChild(noNotificationsMessage);
         } else {
           const dateElement = document.createElement("p");
           dateElement.classList.add("pink-text");
@@ -337,13 +337,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const notificationContainer = document.createElement("div");
             notificationContainer.classList.add("notification-container");
+            // Ajouter l'ID read-notification au notification-container pour rendre transparent la notification comme lue.
 
-            const notificationTitle = document.createElement("p");
+            const notificationTitle = document.createElement("span");
             notificationTitle.classList.add("notification");
             notificationTitle.textContent = notification.title;
             notificationContainer.appendChild(notificationTitle);
 
-            const notificationContent = document.createElement("p");
+            const notificationContent = document.createElement("span");
             notificationContent.classList.add("notification-content");
             notificationContent.textContent = notification.message;
             notificationContainer.appendChild(notificationContent);
