@@ -133,8 +133,7 @@ function displaySideNotification(notification) {
       declineBattleRequest(notification._id);
     });
     buttonContainer.appendChild(declineButton);
-  } 
-  else {
+  } else {
     const notificationContent = document.createElement("div");
     notificationContent.classList.add("notification-content");
     notificationContent.textContent = notification.message;
