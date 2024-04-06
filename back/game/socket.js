@@ -43,64 +43,6 @@ function rateLimitSocket(socket, next) {
   }
 }
 
-function checkAndUnlockAchievement(userId, achievement) {
-  console.log("Checking achievement", achievement + " for user", userId);
-  try {
-    const db = getDB();
-    const users = db.collection("users");
-
-    try {
-      users.findOne({ _id: new ObjectId(userId) }).then((user) => {
-        if (!user.achievements.includes(achievement)) {
-          users
-            .updateOne(
-              { _id: new ObjectId(userId) },
-              { $push: { achievements: achievement } }
-            )
-            .then(() => {
-              const notifications = db.collection("notifications");
-              notifications.insertOne({
-                content: `You unlocked the achievement: ${achievement}`,
-                from: "[SYSTEM]",
-                to: user._id,
-                date: new Date(),
-                type: "achievement",
-                read: false,
-              });
-            });
-        }
-      });
-    } catch (err) {
-      try {
-        users.findOne({ username: userId }).then((user) => {
-          if (!user.achievements.includes(achievement)) {
-            users
-              .updateOne(
-                { username: userId },
-                { $push: { achievements: achievement } }
-              )
-              .then(() => {
-                const notifications = db.collection("notifications");
-                notifications.insertOne({
-                  content: `You unlocked the achievement: ${achievement}`,
-                  from: "[SYSTEM]",
-                  to: user._id,
-                  date: new Date(),
-                  type: "achievement",
-                  read: false,
-                });
-              });
-          }
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
-}
-
 function createSocketGame(io) {
   let waitingPlayer = null;
   const rooms = {};
@@ -160,7 +102,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "playing" } }
+        { $set: { activity: "playing" } },
       );
     });
 
@@ -206,7 +148,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "playing" } }
+        { $set: { activity: "playing" } },
       );
     });
 
@@ -218,7 +160,7 @@ function createSocketGame(io) {
         gameState.playerspositions[0],
         gameState.playerspositions[1],
         gameState.vwalls,
-        gameState.hwalls
+        gameState.hwalls,
       );
       if (
         isLegal(
@@ -227,14 +169,13 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         ) ||
         (jump_coord[0] == newCoord[0] && jump_coord[1] == newCoord[1])
       ) {
         socket.emit("legalMove", newCoord);
       } else {
         socket.emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       }
     });
 
@@ -245,24 +186,20 @@ function createSocketGame(io) {
       if (checkWin(gameState, 1)) {
         const gameId = data.gameId;
 
+        // @arol90 c'est quoi cette merde
+        // const gameState = data.gameState;
+        // let newCoord = Rulebased.computeMove(gameState);
+        // gameState.playerspositions[1] = newCoord;
+
         // Tiens voilà mieux
         let newCoord = getNextMoveToFollowShortestPath(gameState, 2);
         gameState.playerspositions[1] = newCoord;
 
         const db = getDB();
         const games = db.collection("games");
-        const game = await games.findOne({ _id: new ObjectId(gameId) });
-
-        // Check if one of the user is an AI, if no, then add achievements
-        if (
-          !game.players[0].startsWith("AI") &&
-          !game.players[1].startsWith("AI")
-        ) {
-          checkAndUnlockAchievement(game.players[0], "First Win");
-          checkAndUnlockAchievement(game.players[1], "First Loss");
-        }
 
         // Check if the game is over
+        const game = await games.findOne({ _id: new ObjectId(gameId) });
         if (game.status === 2) {
           socket.emit("gameOver", game);
           return;
@@ -270,7 +207,7 @@ function createSocketGame(io) {
 
         let res = await games.updateOne(
           { _id: new ObjectId(gameId) },
-          { $set: gameState }
+          { $set: gameState },
         );
 
         socket.emit("aiLastMove", newCoord);
@@ -291,7 +228,7 @@ function createSocketGame(io) {
 
         let res1 = await games.updateOne(
           { _id: new ObjectId(gameId) },
-          { $set: gameState }
+          { $set: gameState },
         );
 
         if (checkWin(gameState, 2)) {
@@ -303,18 +240,9 @@ function createSocketGame(io) {
                 status: 2,
                 winner: "draw",
               },
-            }
+            },
           );
           const game = await games.findOne({ _id: new ObjectId(gameId) });
-
-          // Check if one of the user is an AI, if no, then add achievements
-          if (
-            !game.players[0].startsWith("AI") &&
-            !game.players[1].startsWith("AI")
-          ) {
-            checkAndUnlockAchievement(game.players[1], "First Win");
-            checkAndUnlockAchievement(game.players[0], "First Loss");
-          }
           socket.emit("draw", game);
         } else {
           const games = db.collection("games");
@@ -325,7 +253,7 @@ function createSocketGame(io) {
                 status: 2,
                 winner: gameState.players[0],
               },
-            }
+            },
           );
 
           const game = await games.findOne({ _id: new ObjectId(gameId) });
@@ -352,7 +280,7 @@ function createSocketGame(io) {
 
         let res1 = await games.updateOne(
           { _id: new ObjectId(gameId) },
-          { $set: gameState }
+          { $set: gameState },
         );
 
         let res2 = await games.updateOne(
@@ -362,7 +290,7 @@ function createSocketGame(io) {
               status: 2,
               winner: gameState.players[1],
             },
-          }
+          },
         );
 
         const game = await games.findOne({ _id: new ObjectId(gameId) });
@@ -401,7 +329,7 @@ function createSocketGame(io) {
 
       let res = await games.updateOne(
         { _id: new ObjectId(gameId) },
-        { $set: gameState }
+        { $set: gameState },
       );
 
       socket.emit("aiMove", newCoord);
@@ -421,11 +349,10 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         )
       ) {
         socket.emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       } else {
         socket.emit("legalWall");
       }
@@ -446,7 +373,7 @@ function createSocketGame(io) {
 
       let res = await games.updateOne(
         { _id: new ObjectId(gameId) },
-        { $set: gameState }
+        { $set: gameState },
       );
 
       let username = gameState.players[0];
@@ -456,7 +383,7 @@ function createSocketGame(io) {
 
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "inactive" } }
+        { $set: { activity: "inactive" } },
       );
 
       socket.emit("leaveSuccess");
@@ -505,7 +432,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "playing" } }
+        { $set: { activity: "playing" } },
       );
     });
 
@@ -588,26 +515,10 @@ function createSocketGame(io) {
 
     socket.on("player1Wall", (data) => {
       gameNamespace.to(data.roomId).emit("updateAfterPayer1Wall", data.wall);
-
-      // Check if player1 has no more walls
-      if (rooms[data.roomId][0].p1walls === 0) {
-        checkAndUnlockAchievement(
-          rooms[data.roomId][0].username,
-          "Walls Master"
-        );
-      }
     });
 
     socket.on("player2Wall", (data) => {
       gameNamespace.to(data.roomId).emit("updateAfterPayer2Wall", data.wall);
-
-      // Check if player2 has no more walls
-      if (rooms[data.roomId][1].p2walls === 0) {
-        checkAndUnlockAchievement(
-          rooms[data.roomId][1].username,
-          "Walls Master"
-        );
-      }
     });
 
     socket.on("lastMoveToPlay", (data) => {
@@ -617,23 +528,14 @@ function createSocketGame(io) {
 
     socket.on("player1Win", (data) => {
       gameNamespace.to(data.roomId).emit("player1Win");
-
-      checkAndUnlockAchievement(rooms[data.roomId][0].username, "First Win");
-      checkAndUnlockAchievement(rooms[data.roomId][1].username, "First Loss");
     });
 
     socket.on("player2Win", (data) => {
       gameNamespace.to(data.roomId).emit("player2Win");
-
-      checkAndUnlockAchievement(rooms[data.roomId][1].username, "First Win");
-      checkAndUnlockAchievement(rooms[data.roomId][0].username, "First Loss");
     });
 
     socket.on("draw", (data) => {
       gameNamespace.to(data.roomId).emit("draw");
-
-      checkAndUnlockAchievement(rooms[data.roomId][0].username, "First Draw");
-      checkAndUnlockAchievement(rooms[data.roomId][1].username, "First Draw");
     });
 
     socket.on("timeIsUp", (data) => {
@@ -641,13 +543,11 @@ function createSocketGame(io) {
     });
 
     socket.on("timeIsUpForPlayer2", (data) => {
-      checkAndUnlockAchievement(rooms[data.roomId][1].username, "Slow Brain");
-
       let gameState = data.gameState;
       let possibleMoves = getPossibleMoves(
         gameState,
         gameState.playerspositions[1],
-        2
+        2,
       );
       let possibleWalls = getPossibleWalls(gameState, 2);
       possibleMoves = possibleMoves.concat(possibleWalls);
@@ -663,13 +563,11 @@ function createSocketGame(io) {
     });
 
     socket.on("timeIsUpForPlayer1", (data) => {
-      checkAndUnlockAchievement(rooms[data.roomId][0].username, "Slow Brain");
-
       let gameState = data.gameState;
       let possibleMoves = getPossibleMoves(
         gameState,
         gameState.playerspositions[0],
-        1
+        1,
       );
       let possibleWalls = getPossibleWalls(gameState, 1);
       possibleMoves = possibleMoves.concat(possibleWalls);
@@ -692,7 +590,7 @@ function createSocketGame(io) {
         gameState.playerspositions[0],
         gameState.playerspositions[1],
         gameState.vwalls,
-        gameState.hwalls
+        gameState.hwalls,
       );
       if (
         isLegal(
@@ -701,14 +599,13 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         ) ||
         (jump_coord[0] == newCoord[0] && jump_coord[1] == newCoord[1])
       ) {
         gameNamespace.to(data.roomId).emit("player1MoveIsLegal", newCoord);
       } else {
         gameNamespace.to(data.roomId).emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       }
     });
 
@@ -720,7 +617,7 @@ function createSocketGame(io) {
         gameState.playerspositions[0],
         gameState.playerspositions[1],
         gameState.vwalls,
-        gameState.hwalls
+        gameState.hwalls,
       );
       if (
         isLegal(
@@ -729,14 +626,13 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         ) ||
         (jump_coord[0] == newCoord[0] && jump_coord[1] == newCoord[1])
       ) {
         gameNamespace.to(data.roomId).emit("player2MoveIsLegal", newCoord);
       } else {
         gameNamespace.to(data.roomId).emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       }
     });
 
@@ -754,11 +650,10 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         )
       ) {
         gameNamespace.to(data.roomId).emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       } else {
         gameNamespace.to(data.roomId).emit("player1WallIsLegal", data.wall);
       }
@@ -778,11 +673,10 @@ function createSocketGame(io) {
           gameState.vwalls,
           gameState.hwalls,
           gameState.playerspositions[0],
-          gameState.playerspositions[1]
+          gameState.playerspositions[1],
         )
       ) {
         gameNamespace.to(data.roomId).emit("illegal");
-        checkAndUnlockAchievement(data.userId, "Cheater!");
       } else {
         gameNamespace.to(data.roomId).emit("player2WallIsLegal", data.wall);
       }
@@ -798,7 +692,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "inactive" } }
+        { $set: { activity: "inactive" } },
       );
       gameNamespace.to(data.roomId).emit("opponentLeave");
       socket.disconnect();
@@ -816,7 +710,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "inactive" } }
+        { $set: { activity: "inactive" } },
       );
       gameNamespace.to(data.roomId).emit("opponentLeave");
       socket.disconnect();
@@ -839,7 +733,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { activity: "inactive" } }
+        { $set: { activity: "inactive" } },
       );
 
       socket.emit("leaveSuccess");
@@ -854,7 +748,7 @@ function createSocketGame(io) {
       let userId = user._id;
       await users.updateOne(
         { _id: new ObjectId(userId) },
-        { $set: { elo: data.newElo } }
+        { $set: { elo: data.newElo } },
       );
     });
   });

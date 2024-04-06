@@ -1213,12 +1213,12 @@ socket.on("illegal", () => {
 });
 
 window.addEventListener("unload", function (event) {
-  if (player == 1 && !finished) {
+  if (player == 1) {
     socket.emit("player1Leave", {
       roomId: roomId,
       username: players[0],
     });
-  } else if (player == 2 && !finished) {
+  } else if (player == 2) {
     socket.emit("player2Leave", {
       roomId: roomId,
       username: players[1],

@@ -22,8 +22,6 @@ db.users.insertOne({
   elo: 800,
   friends: [], // Friends list containing ObjectIds
   activity: "inactive", // Activity status (active, inactive)
-  achievements: [], // Achievements list containing ObjectIds
-  avatar: null, // Avatar / profile picture
 });
 
 db.createCollection("secrets");
