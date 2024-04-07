@@ -27,6 +27,16 @@ const addFriendButton = document.getElementById("add-friend");
 
 let notificationCount = 0;
 
+socket.on("connect", async () => {
+  console.log("Connected to server.");
+  const token = localStorage.getItem("token");
+  socket.emit("setSocket", token);
+});
+
+socket.on("redirectToGame", (roomId) => {
+  window.location.href = `online-game.html?roomId=${roomId}`;
+});
+
 function incrementNotificationCount() {
   notificationCount++;
   updateNotificationDisplay();

@@ -392,6 +392,33 @@ function createSocketGame(io) {
 
     /*----------------------------------------------*/
 
+    socket.on("test", () => {
+      console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    });
+
+    socket.on("setSocket", async (token) => {
+      const db = getDB();
+      const users = db.collection("users");
+      const decoded = await verifyToken(token);
+      console.log(decoded.username);
+      if (!decoded) {
+        socket.emit("error", "Invalid token");
+        return;
+      }
+      let caca = await users.updateOne(
+        { username: decoded.username },
+        { $set: { socketId: socket.id } },
+      );
+      console.log(caca);
+    });
+
+    socket.on("redirectToGame", (data) => {
+      console.log("cc");
+      console.log(data.friendSocketId);
+      gameNamespace.to(data.friendSocketId).emit("redirectToGame", roomId);
+    });
+
     socket.on("searchGame", async (data) => {
       console.log("search game");
       const decoded = await verifyToken(data.token);
