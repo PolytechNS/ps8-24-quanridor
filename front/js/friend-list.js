@@ -859,6 +859,16 @@ document.addEventListener("DOMContentLoaded", function () {
         roomId: roomId,
         friendSocketId: friend.socketId,
       });
+
+      await fetch(`${baseUrl}/api/notifications/${notificationId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type: "battleRequest" }),
+      });
+
       window.location.href = `online-game.html?roomId=${roomId}`;
     } catch (error) {
       console.error("Error accepting battle request:", error);
