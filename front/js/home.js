@@ -27,14 +27,18 @@ const addFriendButton = document.getElementById("add-friend");
 
 let notificationCount = 0;
 
-socket.on("connect", async () => {
+socket2.on("connect", async () => {
   console.log("Connected to server.");
   const token = localStorage.getItem("token");
-  socket.emit("setSocket", token);
+  socket2.emit("setSocket", { token: token, socketId: socket2.id });
+  console.log(socket2.id);
 });
 
-socket.on("redirectToGame", (roomId) => {
-  window.location.href = `online-game.html?roomId=${roomId}`;
+socket2.on("redirectToGame", (roomId) => {
+  console.log("yoooo");
+  console.log(roomId);
+
+  //window.location.href = `online-game.html?roomId=${roomId}`;
 });
 
 function incrementNotificationCount() {

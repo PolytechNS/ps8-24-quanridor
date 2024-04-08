@@ -1,5 +1,5 @@
 // -------------------------- FRIENDS --------------------------
-const socket = io("/api/game");
+const socket2 = io("/api/game");
 const friendIdToUsername = {};
 let currentSelectedFriendId = null;
 
@@ -821,6 +821,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function acceptBattleRequest(notificationId) {
+    socket2.emit("test");
     const token = localStorage.getItem("token");
     try {
       const notificationResponse = await fetch(
@@ -836,6 +837,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const notification = await notificationResponse.json();
       const friendName = notification.message.split(" ")[0];
+      console.log(friendName);
 
       const friendResponse = await fetch(
         `${baseUrl}/api/users?username=${friendName}`,
@@ -849,10 +851,12 @@ document.addEventListener("DOMContentLoaded", function () {
       );
 
       const friend = await friendResponse.json();
+      console.log(friend.username);
+      console.log(friend.socketId);
 
       const roomId = `battle_${Math.floor(Math.random() * 1000)}`;
       console.log(friend.socketId);
-      socket.emit("redirectToGame", {
+      socket2.emit("redirectToGame", {
         roomId: roomId,
         friendSocketId: friend.socketId,
       });

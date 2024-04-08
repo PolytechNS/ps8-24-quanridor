@@ -337,7 +337,8 @@ async function handleUsersGet(request, response, decodedToken) {
             elo: otherUser.elo,
             friends: otherUser.friends,
             activity: otherUser.activity,
-          })
+            socketId: otherUser.socketId,
+          }),
         );
         return;
       }
@@ -351,7 +352,8 @@ async function handleUsersGet(request, response, decodedToken) {
           elo: user.elo,
           friends: user.friends,
           activity: user.activity,
-        })
+          socketId: user.socketId,
+        }),
       );
     } catch (e) {
       console.error("Error in handleUsersGet:", e);
@@ -394,7 +396,8 @@ async function handleUserGet(request, response, decodedToken) {
         username: otherUser.username,
         elo: otherUser.elo,
         activity: otherUser.activity,
-      })
+        socketId: otherUser.socketId,
+      }),
     );
   } catch (e) {
     console.error("Error in handleUserGet:", e);
