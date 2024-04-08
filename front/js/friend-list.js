@@ -837,7 +837,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const notification = await notificationResponse.json();
       const friendName = notification.message.split(" ")[0];
-      console.log(friendName);
 
       const friendResponse = await fetch(
         `${baseUrl}/api/users?username=${friendName}`,
@@ -860,7 +859,7 @@ document.addEventListener("DOMContentLoaded", function () {
         roomId: roomId,
         friendSocketId: friend.socketId,
       });
-      //window.location.href = `online-game.html?roomId=${roomId}`;
+      window.location.href = `online-game.html?roomId=${roomId}`;
     } catch (error) {
       console.error("Error accepting battle request:", error);
     }

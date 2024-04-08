@@ -87,6 +87,11 @@ async function manageRequest(request, response) {
       ) {
         handleNotificationsGet(request, response, decodedToken);
       } else if (
+        normalizedPath.startsWith(`${apiPath}/notifications/`) &&
+        request.method === "GET"
+      ) {
+        handleNotificationGet(request, response, decodedToken);
+      } else if (
         normalizedPath === `${apiPath}/notifications/markAsRead` &&
         request.method === "PUT"
       ) {
@@ -147,6 +152,12 @@ async function manageRequest(request, response) {
         request.method === "GET"
       ) {
         handleGameGet(request, response, decodedToken);
+      } else if (
+        normalizedPath === `${apiPath}/users` &&
+        request.method === "GET" &&
+        parsedUrl.query.username
+      ) {
+        handleUserWithUsernameGet(request, response, decodedToken);
       } else if (
         normalizedPath === `${apiPath}/users` &&
         request.method === "GET"
@@ -406,6 +417,49 @@ async function handleUserGet(request, response, decodedToken) {
   }
 }
 
+async function handleUserWithUsernameGet(request, response, decodedToken) {
+  console.log("OUI C MOI");
+  addCors(response, ["GET"]);
+
+  const parsedUrl = url.parse(request.url, true);
+  const username = parsedUrl.query.username;
+
+  try {
+    const db = getDB();
+    const users = db.collection("users");
+    const authenticatedUser = await users.findOne({ username: username });
+
+    if (!authenticatedUser) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    const otherUser = await users.findOne({ username });
+
+    if (!otherUser) {
+      response.writeHead(404, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not found" }));
+      return;
+    }
+
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(
+      JSON.stringify({
+        _id: otherUser._id.toString(),
+        username: otherUser.username,
+        elo: otherUser.elo,
+        activity: otherUser.activity,
+        socketId: otherUser.socketId,
+      }),
+    );
+  } catch (e) {
+    console.error("Error in handleUserWithUsernameGet:", e);
+    response.writeHead(400, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ message: "Failed to retrieve user" }));
+  }
+}
+
 // ------------------------------ FRIENDS HANDLING ------------------------------
 
 async function handleFriendRequestPost(request, response, decodedToken) {
@@ -539,6 +593,48 @@ async function handleNotificationsGet(request, response, decodedToken) {
       response.writeHead(400, { "Content-Type": "application/json" });
       response.end(
         JSON.stringify({ message: "Failed to retrieve notifications" })
+      );
+    }
+  }
+}
+
+async function handleNotificationGet(request, response, decodedToken) {
+  addCors(response, ["GET"]);
+
+  const parsedUrl = url.parse(request.url, true);
+  const notificationId = parsedUrl.pathname.split("/").pop();
+
+  try {
+    const db = getDB();
+    const notifications = db.collection("notifications");
+    const username = decodedToken.username;
+    const users = db.collection("users");
+    const user = await users.findOne({ username });
+
+    if (!user) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    const notification = await notifications.findOne({
+      _id: new ObjectId(notificationId),
+      to: user._id,
+    });
+
+    if (!notification) {
+      response.writeHead(404, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "Notification not found" }));
+      return;
+    }
+
+    response.end(JSON.stringify(notification));
+  } catch (e) {
+    console.error("Error in handleNotificationGet:", e);
+    if (!response.headersSent) {
+      response.writeHead(400, { "Content-Type": "application/json" });
+      response.end(
+        JSON.stringify({ message: "Failed to retrieve notification" }),
       );
     }
   }

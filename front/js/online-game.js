@@ -1,12 +1,21 @@
 const socket = io("/api/game");
+const urlParams = new URLSearchParams(window.location.search);
+let roomId = urlParams.get("roomId");
 
 socket.on("connect", () => {
   console.log("Connected to server.");
 });
 
-socket.emit("searchGame", {
-  token: localStorage.getItem("token"),
-});
+if (roomId) {
+  socket.emit("joinRoom", {
+    roomId: roomId,
+    token: localStorage.getItem("token"),
+  });
+} else {
+  socket.emit("searchGame", {
+    token: localStorage.getItem("token"),
+  });
+}
 
 socket.on("waiting", () => {
   console.log("waiting");
@@ -14,7 +23,6 @@ socket.on("waiting", () => {
 
 let gameId;
 let difficulty;
-let roomId;
 export let player;
 let timer;
 let timerInterval;

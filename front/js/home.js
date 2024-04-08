@@ -35,10 +35,7 @@ socket2.on("connect", async () => {
 });
 
 socket2.on("redirectToGame", (roomId) => {
-  console.log("yoooo");
-  console.log(roomId);
-
-  //window.location.href = `online-game.html?roomId=${roomId}`;
+  window.location.href = `online-game.html?roomId=${roomId}`;
 });
 
 function incrementNotificationCount() {
