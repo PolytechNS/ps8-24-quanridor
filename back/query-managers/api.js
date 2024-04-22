@@ -152,6 +152,11 @@ async function manageRequest(request, response) {
         request.method === "GET"
       ) {
         handleLeaderboardGet(request, response, decodedToken);
+      } else if (
+        normalizedPath === `${apiPath}/leaderboard/friends` &&
+        request.method === "GET"
+      ) {
+        handleFriendsLeaderboardGet(request, response, decodedToken);
       }
 
       // Game
@@ -484,6 +489,46 @@ async function handleLeaderboardGet(request, response, decodedToken) {
     response.end(JSON.stringify(leaderboard));
   } catch (e) {
     console.error("Error in handleLeaderboardGet:", e);
+    response.writeHead(500, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ message: "Internal Server Error" }));
+  }
+}
+
+async function handleFriendsLeaderboardGet(request, response, decodedToken) {
+  addCors(response, ["GET"]);
+
+  try {
+    const db = getDB();
+    const users = db.collection("users");
+
+    const user = await users.findOne({ username: decodedToken.username });
+    if (!user) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "User not authenticated" }));
+      return;
+    }
+
+    const friendIds = user.friends;
+    const friendsLeaderboard = await users
+      .find({ _id: { $in: friendIds } })
+      .sort({ elo: -1 })
+      .toArray();
+
+    // Add the current user to the friends leaderboard
+    const currentUser = {
+      _id: user._id,
+      username: user.username,
+      elo: user.elo,
+    };
+    friendsLeaderboard.push(currentUser);
+
+    // Sort the friends leaderboard again including the current user
+    friendsLeaderboard.sort((a, b) => b.elo - a.elo);
+
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify(friendsLeaderboard));
+  } catch (e) {
+    console.error("Error in handleFriendsLeaderboardGet:", e);
     response.writeHead(500, { "Content-Type": "application/json" });
     response.end(JSON.stringify({ message: "Internal Server Error" }));
   }
