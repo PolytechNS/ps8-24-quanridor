@@ -226,28 +226,28 @@ function isLegal(
     return false;
   for (let wall of v_walls) {
     if (
-      wall[0] == current_coord[0] &&
-      (wall[1] == current_coord[1] || wall[1] == current_coord[1] - 1) &&
+      wall[0][0] == current_coord[0] &&
+      (wall[0][1] == current_coord[1] || wall[0][1] == current_coord[1] - 1) &&
       x - current_coord[0] == 1
     )
       return false;
     if (
-      wall[0] == current_coord[0] - 1 &&
-      (wall[1] == current_coord[1] || wall[1] == current_coord[1] - 1) &&
+      wall[0][0] == current_coord[0] - 1 &&
+      (wall[0][1] == current_coord[1] || wall[0][1] == current_coord[1] - 1) &&
       current_coord[0] - x == 1
     )
       return false;
   }
   for (let wall of h_walls) {
     if (
-      wall[1] == current_coord[1] &&
-      (wall[0] == current_coord[0] || wall[0] == current_coord[0] - 1) &&
+      wall[0][1] == current_coord[1] &&
+      (wall[0][0] == current_coord[0] || wall[0][0] == current_coord[0] - 1) &&
       y - current_coord[1] == 1
     )
       return false;
     if (
-      wall[1] == current_coord[1] - 1 &&
-      (wall[0] == current_coord[0] || wall[0] == current_coord[0] - 1) &&
+      wall[0][1] == current_coord[1] - 1 &&
+      (wall[0][0] == current_coord[0] || wall[0][0] == current_coord[0] - 1) &&
       current_coord[1] - y == 1
     )
       return false;
@@ -490,24 +490,25 @@ function isWallLegal(
   if (
     v_walls.some(
       (wall) =>
-        wall[0] === coord[0] &&
-        ((Math.abs(wall[1] - coord[1]) === 1 && current_direction === "v") ||
-          Math.abs(wall[1] - coord[1]) === 0),
+        wall[0][0] === coord[0] &&
+        ((Math.abs(wall[0][1] - coord[1]) === 1 && current_direction === "v") ||
+          Math.abs(wall[0][1] - coord[1]) === 0),
     )
   )
     return false;
   if (
     h_walls.some(
       (wall) =>
-        wall[1] === coord[1] &&
-        ((Math.abs(wall[0] - coord[0]) === 1 && current_direction === "h") ||
-          Math.abs(wall[0] - coord[0]) === 0),
+        wall[0][1] === coord[1] &&
+        ((Math.abs(wall[0][0] - coord[0]) === 1 && current_direction === "h") ||
+          Math.abs(wall[0][0] - coord[0]) === 0),
     )
   )
     return false;
 
+  let playerNum = player == 1 ? 0 : 1;
   if (current_direction === "v") {
-    v_walls.push(coord);
+    v_walls.push([coord,playerNum]);
   } else {
     h_walls.push(coord);
   }

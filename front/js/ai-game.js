@@ -208,28 +208,28 @@ function isLegal(current_coord, new_coord) {
     return false;
   for (let wall of v_walls) {
     if (
-      wall[0] == current_coord[0] &&
-      (wall[1] == current_coord[1] || wall[1] == current_coord[1] - 1) &&
+      wall[0][0] == current_coord[0] &&
+      (wall[0][1] == current_coord[1] || wall[0][1] == current_coord[1] - 1) &&
       x - current_coord[0] == 1
     )
       return false;
     if (
-      wall[0] == current_coord[0] - 1 &&
-      (wall[1] == current_coord[1] || wall[1] == current_coord[1] - 1) &&
+      wall[0][0] == current_coord[0] - 1 &&
+      (wall[0][1] == current_coord[1] || wall[0][1] == current_coord[1] - 1) &&
       current_coord[0] - x == 1
     )
       return false;
   }
   for (let wall of h_walls) {
     if (
-      wall[1] == current_coord[1] &&
-      (wall[0] == current_coord[0] || wall[0] == current_coord[0] - 1) &&
+      wall[0][1] == current_coord[1] &&
+      (wall[0][0] == current_coord[0] || wall[0][0] == current_coord[0] - 1) &&
       y - current_coord[1] == 1
     )
       return false;
     if (
-      wall[1] == current_coord[1] - 1 &&
-      (wall[0] == current_coord[0] || wall[0] == current_coord[0] - 1) &&
+      wall[0][1] == current_coord[1] - 1 &&
+      (wall[0][0] == current_coord[0] || wall[0][0] == current_coord[0] - 1) &&
       current_coord[1] - y == 1
     )
       return false;
@@ -239,23 +239,24 @@ function isLegal(current_coord, new_coord) {
 
 function isWallLegal(player, coord) {
   let isPossible;
+  let playerNum = tour%2 == 0 ? 0 : 1;
   if ((player == 1 && p1_walls == 0) || (player == 2 && p2_walls == 0))
     return false;
   if (coord[0] > 7 || coord[0] < 0 || coord[1] > 7 || coord[1] < 0)
     return false;
   for (let wall of v_walls) {
     if (
-      wall[0] == coord[0] &&
-      ((Math.abs(wall[1] - coord[1]) == 1 && current_direction == "v") ||
-        Math.abs(wall[1] - coord[1]) == 0)
+      wall[0][0] == coord[0] &&
+      ((Math.abs(wall[0][1] - coord[1]) == 1 && current_direction == "v") ||
+        Math.abs(wall[0][1] - coord[1]) == 0)
     )
       return false;
   }
   for (let wall of h_walls) {
     if (
-      wall[1] == coord[1] &&
-      ((Math.abs(wall[0] - coord[0]) == 1 && current_direction == "h") ||
-        Math.abs(wall[0] - coord[0]) == 0)
+      wall[0][1] == coord[1] &&
+      ((Math.abs(wall[0][0] - coord[0]) == 1 && current_direction == "h") ||
+        Math.abs(wall[0][0] - coord[0]) == 0)
     )
       return false;
   }
@@ -264,14 +265,14 @@ function isWallLegal(player, coord) {
   p1_coord = [-1, -1];
   p2_coord = [-1, -1];
   if (current_direction == "v") {
-    v_walls.push(coord);
+    v_walls.push([coord, playerNum]);
     isPossible = !!(
       aStarPathfinding(p1CoordTemp, p1_goals) &&
       aStarPathfinding(p2CoordTemp, p2_goals)
     );
     v_walls.pop();
   } else {
-    h_walls.push(coord);
+    h_walls.push([coord, playerNum]);
     isPossible = !!(
       aStarPathfinding(p1CoordTemp, p1_goals) &&
       aStarPathfinding(p2CoordTemp, p2_goals)
@@ -356,15 +357,16 @@ function checkWin(player) {
 }
 
 function placeWall(coord, direction) {
-  if (direction == "v") v_walls.push(coord);
-  else h_walls.push(coord);
+  let playerNum = tour%2 == 0 ? 0 : 1;
+  if (direction == "v") v_walls.push([coord, playerNum]);
+  else h_walls.push([coord, playerNum]);
 }
 
 function drawWalls() {
   for (let wall of v_walls) {
     drawRoundedRect(
-      77 * (wall[0] + 1),
-      10 + wall[1] * 77,
+      77 * (wall[0][0] + 1),
+      10 + wall[0][1] * 77,
       10,
       2 * 67 + 10,
       5,
@@ -374,8 +376,8 @@ function drawWalls() {
 
   for (let wall of h_walls) {
     drawRoundedRect(
-      10 + wall[0] * 77,
-      77 * (wall[1] + 1),
+      10 + wall[0][0] * 77,
+      77 * (wall[0][1] + 1),
       2 * 67 + 10,
       10,
       5,
