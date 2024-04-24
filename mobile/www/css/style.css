@@ -45,10 +45,11 @@ svg {
 }
 
 #user {
-  background: url("../assets/user-circle.svg") center/50% no-repeat;
-  width: 100%;
-  height: 50%;
+  background: url("../assets/user-circle.svg") center/contain no-repeat;
+  width: 75%;
+  height: 75%;
   filter: none;
+  object-fit: fill;
 }
 
 #bot {
@@ -70,8 +71,8 @@ svg {
 
 .small-title {
   display: flex;
-  background: url("../assets/quanridor-title.svg") center/650px no-repeat;
-  width: 100vh;
+  background: url("../assets/quanridor-title.svg") center/contain no-repeat;
+  width: 90%;
   justify-content: center;
   align-items: center;
   height: 20vh;
@@ -292,8 +293,19 @@ canvas {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-.friend-box,
+
+.friend-box {
+  background-color: rgba(1,5,37,1);
+  border-color: rgba(70, 80, 168, 0);
+  border-radius: 38px;
+  border-style: solid;
+  border-width: 10px;
+}
+
 .profile-box {
+  width: 80%;
+  height: auto;
+  min-height: 80%;
   background-color: rgba(1,5,37,1);
   border-color: rgba(70, 80, 168, 0);
   border-radius: 38px;
@@ -329,10 +341,6 @@ canvas {
   height: 90vh;
 }
 
-.profile-box {
-  width: 80%;
-  height: 50vh;
-}
 
 #separator {
   height: 1vh;
@@ -353,7 +361,7 @@ canvas {
   width: 100px;
   height: 10vh;
   cursor: pointer;
-  padding: 50px;
+  padding: 20px;
   transition: transform 0.3s ease; /* Transition uniquement pour la transformation */
 }
 
@@ -589,8 +597,8 @@ canvas {
   position: absolute;
   width: 35vh;
   height: 75vh;
-  top: 15%;
-  right: 35vh;
+  top: 10%; /* Utilisation d'un pourcentage pour positionner la div par rapport au haut de l'écran */
+  right: 5%; /* Utilisation d'un pourcentage pour positionner la div par rapport à la droite de l'écran */
   background-color: rgba(1,5,37,1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   border-radius: 30px;
@@ -616,11 +624,18 @@ canvas {
 }
 
 .scrollbar-friend-content {
-  padding: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   height: 76vh;
   overflow-y: auto;
+  width: 100%;
   scrollbar-color: #EE4F3A rgba(1,5,37,1);
   scroll-behavior: smooth;
+}
+
+.scrollbar-friend-content > * {
+  max-width: 100%; /* Limitez la largeur maximale des éléments enfants */
+  /* Autres styles... */
 }
 
 .scrollbar-content::-webkit-scrollbar {
@@ -828,7 +843,7 @@ canvas {
 }
 
 #small-user{
-  background: url("../assets/user-circle.svg") center/50% no-repeat;
+  background: url("../assets/user-circle.svg") center/contain no-repeat;
   width: 90px;
   height: 90px;
   filter: none;
@@ -837,7 +852,7 @@ canvas {
 .friend-container{
   display: flex;
   align-items: center;
-  width: 300px;
+  width: 90%;
   background-color: rgba(1,5,37,1);
   border-radius: 30px;
   padding: -10px;

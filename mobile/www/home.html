@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="horizontal-container">
-      <div class="vertical-container">
+      <div class="vertical-container" style="width: 30%;">
         <!-- friend list -->
         <div class="friend-box" id="friend-list">
           <div class="vertical-small-container">
@@ -84,8 +84,8 @@
           </div>
         </div>
       </div>
-      <div class="vertical-container">
-        <a href="home.html"><div class="small-title"></div></a>
+      <div class="vertical-container" style="width: 40%;">
+        <a href="home.html" style="width: 90%;"><div class="small-title"></div></a>
         <a href="play-menu.html"><button class="big-button">Play</button></a>
         <a href="achievements.html"><button class="big-button">Achievements</button></a>
         <a href="leaderboard.html"><button class="big-button">Leaderboard</button></a>
@@ -104,9 +104,9 @@
           <button disabled class="choice-button" id="add-friend-button">Send request</button>
         </div>
         </div>
-      <div class="vertical-container">
+      <div class="vertical-container" style="width: 30%; height: 80vh;">
         <div class="horizontal-container">
-          <div class="vertical-container">
+          <div class="vertical-container" >
             <div class="bell-container">
               <svg id="bell"></svg> <span id="unread-count">0</span>
             </div>
@@ -124,9 +124,8 @@
           >
         </div>
         <div class="profile-box">
-          <div class="vertical-small-container">
-            <br />
-            <svg id="user"></svg>
+          <div class="vertical-small-container" style="height: 70%; display: flex; flex-direction: column;">
+            <svg id="user" style="flex-grow: 1;"></svg>
             <h1 class="text" id="username"></h1>
             <div id="separator"></div>
             <h1 class="text" id="player1-elo"></h1>
