@@ -5,12 +5,15 @@ if (localStorage.getItem("token")) {
 }
 
 document.addEventListener("deviceready", function() {
-  let successPermissionNotification = function(status) {
+  let successCallback = function(status) {
     console.log("Notification permission granted");
   }
-  let errorPermissionNotification = function(status) {
+  let errorCallback = function(status) {
     console.log("Notification permission denied");
   }
-  permissions.requestPermission(permissions.POST_NOTIFICATIONS, successPermissionNotification, errorPermissionNotification);
+  var permissions = cordova.plugins.permissions;
+  permissions.checkPermission(permission, successCallback, errorCallback);
+  permissions.requestPermission(permission, successCallback, errorCallback);
+  permissions.requestPermissions(permissions, successCallback, errorCallback);
   cordova.plugins.notification.local.setDummyNotifications();
 }, false);
