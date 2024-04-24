@@ -4,16 +4,20 @@ if (localStorage.getItem("token")) {
   window.location.href = "home.html";
 }
 
-document.addEventListener("deviceready", function() {
-  let successCallback = function(status) {
-    console.log("Notification permission granted");
-  }
-  let errorCallback = function(status) {
-    console.log("Notification permission denied");
-  }
+let successCallback = function(status) {
+  console.log("Notification permission granted");
+}
+let errorCallback = function(status) {
+  console.log("Notification permission denied");
+}
+
+document.addEventListener('deviceready', () => {
   var permissions = cordova.plugins.permissions;
-  permissions.checkPermission(permission, successCallback, errorCallback);
-  permissions.requestPermission(permission, successCallback, errorCallback);
-  permissions.requestPermissions(permissions, successCallback, errorCallback);
-  cordova.plugins.notification.local.setDummyNotifications();
+  if(permissions.checkPermission(permissions.POST_NOTIFICATIONS, successCallback, errorCallback)) {
+    console.log("Yes :D ");
+  }
+  else {
+    console.warn("No :( ");
+    permissions.requestPermission(permissions.POST_NOTIFICATIONS, successCallback, errorCallback);
+  }
 }, false);
