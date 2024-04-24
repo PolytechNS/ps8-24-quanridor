@@ -364,25 +364,51 @@ function placeWall(coord, direction) {
 
 function drawWalls() {
   for (let wall of v_walls) {
-    drawRoundedRect(
-      77 * (wall[0][0] + 1),
-      10 + wall[0][1] * 77,
-      10,
-      2 * 67 + 10,
-      5,
-      "#FFFFFF",
-    );
+    if (wall[1] === 0) {
+      // Si playerNum est 0, la couleur est blanc
+      drawRoundedRect(
+        77 * (wall[0][0] + 1),
+        10 + wall[0][1] * 77,
+        10,
+        2 * 67 + 10,
+        5,
+        "#FFFFFF",
+      );
+    } else {
+      // Sinon, la couleur est noir
+      drawRoundedRect(
+        77 * (wall[0][0] + 1),
+        10 + wall[0][1] * 77,
+        10,
+        2 * 67 + 10,
+        5,
+        "#000000",
+      );
+    }
   }
 
   for (let wall of h_walls) {
-    drawRoundedRect(
-      10 + wall[0][0] * 77,
-      77 * (wall[0][1] + 1),
-      2 * 67 + 10,
-      10,
-      5,
-      "#FFFFFF",
-    );
+    if (wall[1] === 0) {
+      // Si playerNum est 0, la couleur est blanc
+      drawRoundedRect(
+        10 + wall[0][0] * 77,
+        77 * (wall[0][1] + 1),
+        2 * 67 + 10,
+        10,
+        5,
+        "#FFFFFF",
+      );
+    } else {
+      // Sinon, la couleur est noir
+      drawRoundedRect(
+        10 + wall[0][0] * 77,
+        77 * (wall[0][1] + 1),
+        2 * 67 + 10,
+        10,
+        5,
+        "#000000",
+      );
+    }
   }
 }
 
