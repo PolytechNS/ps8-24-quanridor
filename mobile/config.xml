@@ -24,5 +24,9 @@
 
     <platform name="android">    
         <icon src="www/img/logo.png"></icon>
+
+        <preference name="StatusBarOverlaysWebView" value="true" />
+        <preference name="StatusBarBackgroundColor" value="#00000000" />
+        <preference name="StatusBarStyle" value="lightcontent" />
     </platform>
 </widget>
