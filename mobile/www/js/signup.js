@@ -1,3 +1,5 @@
+const baseUrl = "https://quanridor.ps8.academy";
+
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector("form");
   form.addEventListener("submit", function (event) {
@@ -6,41 +8,38 @@ document.addEventListener("DOMContentLoaded", function () {
     // Get the values from the form
     const username = form.querySelector('input[name="username"]').value;
     const password = form.querySelector('input[name="password"]').value;
-    const baseUrl = window.location.origin;
+    const confirmPassword = form.querySelector(
+      'input[name="confirmPassword"]',
+    ).value;
+
+    // Optional: Check if passwords match
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
 
     // Construct the JSON object to send
     const data = { username, password };
 
     // Use fetch to send the request
-    fetch(`${baseUrl}/api/login`, {
+    fetch(`${baseUrl}/api/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Login failed with status " + response.status); // Throws an error if response is not ok
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        if (data.banned) {
-          alert("You are banned, you can't login.");
-          return;
-        }
         console.log("Success:", data);
-        if (data.token) {
-          localStorage.setItem("token", data.token); // Save token
-          window.location.href = "home.html"; // Redirect
-        } else {
-          alert("Login failed, please check your credentials.");
-        }
+        alert("Registration successful!");
+        window.location.href = "home.html";
+
+        localStorage.setItem("token", data.token);
       })
       .catch((error) => {
         console.error("Error:", error);
-        alert("Login failed, please check your credentials."); // Affiche une alerte d'échec de connexion
+        alert("An error occurred, please try again.");
       });
   });
 });

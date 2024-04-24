@@ -1,5 +1,6 @@
 // -------------------------- FRIENDS --------------------------
-const socket2 = io("/api/game");
+
+const socket2 = io("https://quanridor.ps8.academy/api/game");
 const friendIdToUsername = {};
 let currentSelectedFriendId = null;
 
@@ -11,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  const baseUrl = window.location.origin;
+  const baseUrl = "https://quanridor.ps8.academy";
   fetch(`${baseUrl}/api/users`, {
     method: "GET",
     headers: {
@@ -44,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
 let currentUserId;
 
 document.addEventListener("DOMContentLoaded", function () {
-  const socket = io("/api/social");
+  const socket = io("https://quanridor.ps8.academy/api/social");
 
   const sendMessageButton = document.getElementById("send");
   const messageInput = document.getElementById("message-input");
@@ -56,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  const baseUrl = window.location.origin;
+  const baseUrl = "https://quanridor.ps8.academy";
 
   const fetchFriendDetails = (friendId) => {
     return fetch(`${baseUrl}/api/users/${friendId}`, {
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         )
           .then((response) => {
             if (!response.ok) {
@@ -179,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const baseUrl = window.location.origin;
+    const baseUrl = "https://quanridor.ps8.academy";
     fetch(`${baseUrl}/api/users`, {
       method: "GET",
       headers: {
@@ -201,7 +202,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
           const friendPromises = friendIds.map((friendId) => {
             const existingFriendContainer = friendList.querySelector(
-              `[data-friendid="${friendId}"]`
+              `[data-friendid="${friendId}"]`,
             );
             if (!existingFriendContainer) {
               return fetchFriendDetails(friendId);
@@ -272,7 +273,7 @@ document.addEventListener("DOMContentLoaded", function () {
             messageInput.value = "";
             console.log("Message sent successfully!");
           }
-        }
+        },
       );
       // Sending notification to the recipient
       //socket.emit("sendMessageNotification", {
@@ -303,6 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
     window.location.href = `online-game.html?roomId=${roomId}`;
   });
 
+  socket.on("lastLaunchServ", (data) => { console.log(data); });
+
   socket.on("newMessage", function (message) {
     addMessageToChat(message, message.from !== currentUserId);
 
@@ -329,12 +332,12 @@ document.addEventListener("DOMContentLoaded", function () {
           });
       } else {
         const friendContainer = document.querySelector(
-          `[data-friendid="${friendId}"]`
+          `[data-friendid="${friendId}"]`,
         );
 
         if (friendContainer !== currentSelectedFriendContainer) {
           const unreadMessageCount = friendContainer.querySelector(
-            ".unread-message-count"
+            ".unread-message-count",
           );
           unreadMessageCount.textContent =
             parseInt(unreadMessageCount.textContent) + 1;
@@ -370,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then((notifications) => {
       const unreadNotifications = notifications.filter(
-        (notification) => !notification.read
+        (notification) => !notification.read,
       );
       notificationCount = unreadNotifications.length;
       updateNotificationDisplay();
@@ -380,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Error fetching notifications at",
         `${baseUrl}/api/notifications`,
         ":",
-        error
+        error,
       );
     });
 
@@ -575,7 +578,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Réinitialiser le compteur de messages non lus pour l'ami sélectionné
       const unreadMessageCount = friendContainer.querySelector(
-        ".unread-message-count"
+        ".unread-message-count",
       );
       unreadMessageCount.textContent = "0";
       unreadMessageCount.style.display = "none";
@@ -617,7 +620,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Friend removed successfully");
         // Mettre à jour la liste des amis après la suppression
         const friendContainer = document.querySelector(
-          `[data-friendid="${friendId}"]`
+          `[data-friendid="${friendId}"]`,
         );
         friendContainer.remove();
         toggleRemoveFriend(true);
@@ -722,7 +725,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         // Réinitialiser le compteur de messages non lus pour l'ami sélectionné
         const unreadMessageCount = currentSelectedFriendContainer.querySelector(
-          ".unread-message-count"
+          ".unread-message-count",
         );
         unreadMessageCount.textContent = "0";
         unreadMessageCount.style.display = "none";
@@ -765,7 +768,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Cacher les boutons "Accept" et "Decline"
         const notificationContainer = document.getElementById(
-          `notification-${notificationId}`
+          `notification-${notificationId}`,
         );
         if (notificationContainer) {
           const acceptButton =
@@ -927,7 +930,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Friend request declined successfully");
         // Supprimer la notification de la liste
         const notificationContainer = document.getElementById(
-          `notification-${notificationId}`
+          `notification-${notificationId}`,
         );
         if (notificationContainer) {
           notificationContainer.remove();

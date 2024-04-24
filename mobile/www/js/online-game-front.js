@@ -7,13 +7,16 @@ const leftEmojiPopup = document.getElementById("left-emoji");
 const rightEmojiPopup = document.getElementById("right-emoji");
 const leftDialoguePopup = document.getElementById("left-dialogue");
 const rightDialoguePopup = document.getElementById("right-dialogue");
+const leftEmotes = document.getElementById("left-emote");
+const rightEmotes = document.getElementById("right-emote");
+const muteEmoteButton = document.getElementById("mute-button");
 
 let selectedEmoji = null;
 let selectedDialogue = null;
 
 const emoteDelay = 5000;
 
-const socket = io("/api/social");
+const socket = io("https://quanridor.ps8.academy/api/social");
 
 function toggleEmotePopup(hide = false) {
   if (hide || emotePopup.style.display === "block") {
@@ -117,3 +120,16 @@ socket.on("emoji", (data) => {
     }, emoteDelay);
   }
 });
+
+muteEmoteButton.addEventListener("click", () => {
+  muteEmoteButton.classList.toggle("mute");
+  muteEmoteButton.classList.toggle("unmute");
+
+  muteEmote(muteEmoteButton.classList.contains("mute"));
+});
+
+function muteEmote(mute) {
+    rightEmotes.style.display = mute ? "none" : "flex";
+    leftEmotes.style.display = mute ? "none" : "flex";
+    emoteButton.disabled = mute;
+}
