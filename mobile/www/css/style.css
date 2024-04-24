@@ -45,10 +45,11 @@ svg {
 }
 
 #user {
-  background: url("../assets/user-circle.svg") center/50% no-repeat;
-  width: 100%;
-  height: 50%;
+  background: url("../assets/user-circle.svg") center/contain no-repeat;
+  width: 75%;
+  height: 75%;
   filter: none;
+  object-fit: fill;
 }
 
 #bot {
@@ -70,8 +71,8 @@ svg {
 
 .small-title {
   display: flex;
-  background: url("../assets/quanridor-title.svg") center/650px no-repeat;
-  width: 100vh;
+  background: url("../assets/quanridor-title.svg") center/contain no-repeat;
+  width: 90%;
   justify-content: center;
   align-items: center;
   height: 20vh;
@@ -292,8 +293,19 @@ canvas {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-.friend-box,
+
+.friend-box {
+  background-color: rgba(1,5,37,1);
+  border-color: rgba(70, 80, 168, 0);
+  border-radius: 38px;
+  border-style: solid;
+  border-width: 10px;
+}
+
 .profile-box {
+  width: 80%;
+  height: auto;
+  min-height: 80%;
   background-color: rgba(1,5,37,1);
   border-color: rgba(70, 80, 168, 0);
   border-radius: 38px;
@@ -329,10 +341,6 @@ canvas {
   height: 90vh;
 }
 
-.profile-box {
-  width: 80%;
-  height: 50vh;
-}
 
 #separator {
   height: 1vh;
@@ -353,7 +361,7 @@ canvas {
   width: 100px;
   height: 10vh;
   cursor: pointer;
-  padding: 50px;
+  padding: 20px;
   transition: transform 0.3s ease; /* Transition uniquement pour la transformation */
 }
 
@@ -589,8 +597,8 @@ canvas {
   position: absolute;
   width: 35vh;
   height: 75vh;
-  top: 15%;
-  right: 35vh;
+  top: 10%; /* Utilisation d'un pourcentage pour positionner la div par rapport au haut de l'écran */
+  right: 5%; /* Utilisation d'un pourcentage pour positionner la div par rapport à la droite de l'écran */
   background-color: rgba(1,5,37,1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   border-radius: 30px;
@@ -616,11 +624,18 @@ canvas {
 }
 
 .scrollbar-friend-content {
-  padding: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   height: 76vh;
   overflow-y: auto;
+  width: 100%;
   scrollbar-color: #EE4F3A rgba(1,5,37,1);
   scroll-behavior: smooth;
+}
+
+.scrollbar-friend-content > * {
+  max-width: 100%; /* Limitez la largeur maximale des éléments enfants */
+  /* Autres styles... */
 }
 
 .scrollbar-content::-webkit-scrollbar {
@@ -828,7 +843,7 @@ canvas {
 }
 
 #small-user{
-  background: url("../assets/user-circle.svg") center/50% no-repeat;
+  background: url("../assets/user-circle.svg") center/contain no-repeat;
   width: 90px;
   height: 90px;
   filter: none;
@@ -837,7 +852,7 @@ canvas {
 .friend-container{
   display: flex;
   align-items: center;
-  width: 300px;
+  width: 90%;
   background-color: rgba(1,5,37,1);
   border-radius: 30px;
   padding: -10px;
@@ -1502,7 +1517,6 @@ svg#close-arrow {
   justify-content: space-around;
   padding: 20px;
   max-height: 90vh;
-  overflow-y: auto;
 }
 
 /* Style des colonnes de classement */
@@ -1511,7 +1525,6 @@ svg#close-arrow {
   margin: 15px;
   margin-right: 20px;
   width: 50%; /* Espacement entre les colonnes */
-  overflow-y: auto;
   text-align: center;
 }
 
@@ -1530,9 +1543,7 @@ svg#close-arrow {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre légère */
   padding: 20px;
   height: 80%; /* Hauteur maximale de la liste avec défilement */
-  overflow-y: auto; /* Activation du défilement vertical si nécessaire */
   text-align: center; /* Centrage horizontal des éléments */
-  overflow-y: auto;
 }
 
 /* Style des éléments de la liste */
@@ -1543,11 +1554,31 @@ svg#close-arrow {
   border-radius: 5px; /* Coins arrondis */
   background-color: rgba(150, 150, 150, 0.75); /* Couleur de fond des éléments */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombre légère */
-  display: block; /* Pour que les éléments soient alignés horizontalement */; /* Pour que les éléments soient alignés horizontalement */
+  display: flex; /* Pour que les éléments soient alignés horizontalement */; /* Pour que les éléments soient alignés horizontalement */
   font-family: 'Nunito', sans-serif; /* Police de caractères */
   max-width: 80%;
   margin-left: auto;
   margin-right: auto;
+  align-items: center;
+}
+
+.rank {
+  width: 30px; /* Largeur fixe pour le rang */
+  text-align: left; /* Aligner le texte à gauche */
+}
+
+.username {
+  flex: 1; /* Utiliser tout l'espace restant */
+  text-align: center; /* Centrer le texte horizontalement */
+  font-size: 24px; /* Taille de police plus grande */
+  text-transform: uppercase; /* Mettre le texte en majuscules */
+  margin-right: 5px; /* Réduire l'espace à droite */
+}
+
+.elo {
+  text-align: center;
+  font-size: 24px; /* Taille de police de l'elo */
+  margin-left: 5px; /* Réduire l'espace à gauche */
 }
 
 /* Style pour le survol des éléments de la liste */
@@ -1555,40 +1586,67 @@ svg#close-arrow {
   background-color: #5b818f; /* Changement de couleur au survol */
 }
 
+@keyframes shine {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.70;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90% { transform: translateX(-1px) rotate(-0.1deg); }
+  15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% { transform: translateX(1px) rotate(0.1deg); }
+  100% { animation-timing-function: cubic-bezier(0.36, 1.33, 0.43, 0.97); } /* Définir la fonction de temporisation */
+}
+
 /* Style pour les éléments du classement avec un rang d'or */
 .leaderboard-item.gold {
   background-color: gold; /* Or pour le rang 1 */
   color: black; /* Couleur du texte */
+  animation: shine 1.5s infinite ease-in-out; /* Animation de brillance infinie pendant 1.5 secondes */  
 }
 
 /* Style pour les éléments du classement avec un rang d'argent */
 .leaderboard-item.silver {
   background-color: silver; /* Argent pour le rang 2 */
   color: black; /* Couleur du texte */
+  animation: shine 1.5s infinite ease-in-out; /* Animation de brillance infinie pendant 1.5 secondes */
+  animation-delay: 0.25s;
 }
 
 /* Style pour les éléments du classement avec un rang de bronze */
 .leaderboard-item.bronze {
   background-color: #cd7f32; /* Bronze pour le rang 3 */
   color: black; /* Couleur du texte */
+  animation: shine 1.5s infinite ease-in-out; /* Animation de brillance infinie pendant 1.5 secondes */
+  animation-delay: 0.5s;
+  
 }
-
 
 .leaderboard-item.gold:hover {
   transform: scale(1.1); /* Mise à l'échelle de 1.1 */
   transition: transform 0.3s ease;
+  animation: shake 1s ease-in-out infinite;
 }
 
 /* Style pour le survol des éléments du classement avec un rang d'argent */
 .leaderboard-item.silver:hover {
   transform: scale(1.1); /* Mise à l'échelle de 1.1 */
   transition: transform 0.3s ease;
+  animation: shake 1s ease-in-out infinite;
 }
 
 /* Style pour le survol des éléments du classement avec un rang de bronze */
 .leaderboard-item.bronze:hover {
   transform: scale(1.1); /* Mise à l'échelle de 1.1 */
   transition: transform 0.3s ease;
+  animation: shake 1s ease-in-out infinite;
 }
 .mute{
   background: url("../assets/mute.svg") center/50px no-repeat;
