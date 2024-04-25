@@ -20,13 +20,33 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                height: 15%; /* 15% de la hauteur de l'écran pour chaque joueur */
+                height: 15%;
+                width: 60%;
+                background-color: rgba(1,5,37,1);
+                border-color: rgba(70, 80, 168, 0);
+                border-radius: 38px;
+                border-style: solid;
+                border-width: 10px;
+                gap: 30px;
             }
             .separator-mobile {
                 height: 70%;
-                width: 10%;
+                width: 5%;
                 border-radius: 40px;
                 background-color: #4650a8;
+            }
+
+            .square{
+                height: 25px;
+                width: 3%;
+            }
+
+            #user {
+                background: url("../assets/user-circle.svg") center/30% no-repeat;
+                width: 80%;
+                height: 80%;
+                background-size: contain; /* Ensure the background image fits within the container */
+                filter: none;
             }
         </style>
     </head>
@@ -61,7 +81,7 @@
                 <!-- Contenu du joueur de gauche -->
                 <svg id="user"></svg>
                 <h1 class="text" id="player1-name">Player</h1>
-                <div id="separator"></div>
+                <div class="separator-mobile"></div>
                 <h1 class="text" id="player1-elo">ELO : N/A</h1>
                 <div class="wall-bar-container">
                     <div class="small-text">Walls</div>
