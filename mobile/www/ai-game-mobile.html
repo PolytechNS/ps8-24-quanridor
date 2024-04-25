@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quanridor - AI Game (Mobile)</title>
+        <link rel="stylesheet" href="css/style.css" type="text/css">
+        <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+        <style>
+            .vertical-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: 100vh;
+                width: 80vh;
+            }
+            #canvas-container {
+                height: 50%; /* Le canvas prendra l'espace restant */
+            }
+            .player-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 15%; /* 15% de la hauteur de l'écran pour chaque joueur */
+            }
+            .separator-mobile {
+                height: 70%;
+                width: 10%;
+                border-radius: 40px;
+                background-color: #4650a8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="vertical-container">
+            <div id="right-player" class="player-container">
+                <!-- Contenu du joueur de droite -->
+                <svg id="user"></svg>
+                <h1 class="text" id="player2-name">AI</h1>
+                <div class="separator-mobile"></div>
+                <h1 class="text" id="player2-elo">ELO : N/A</h1>
+                <div class="wall-bar-container">
+                    <div class="small-text">Walls</div>
+                    <div id="wall-bar-2" class="wall-bar">
+                        <div id="p2-wall1" class="square"></div>
+                        <div id="p2-wall2" class="square"></div>
+                        <div id="p2-wall3" class="square"></div>
+                        <div id="p2-wall4" class="square"></div>
+                        <div id="p2-wall5" class="square"></div>
+                        <div id="p2-wall6" class="square"></div>
+                        <div id="p2-wall7" class="square"></div>
+                        <div id="p2-wall8" class="square"></div>
+                        <div id="p2-wall9" class="square"></div>
+                        <div id="p2-wall10" class="square"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="canvas-container">
+                <canvas></canvas>
+            </div>
+            <div id="left-player" class="player-container">
+                <!-- Contenu du joueur de gauche -->
+                <svg id="user"></svg>
+                <h1 class="text" id="player1-name">Player</h1>
+                <div id="separator"></div>
+                <h1 class="text" id="player1-elo">ELO : N/A</h1>
+                <div class="wall-bar-container">
+                    <div class="small-text">Walls</div>
+                    <div id="wall-bar-1" class="wall-bar">
+                        <div id="p1-wall1" class="square"></div>
+                        <div id="p1-wall2" class="square"></div>
+                        <div id="p1-wall3" class="square"></div>
+                        <div id="p1-wall4" class="square"></div>
+                        <div id="p1-wall5" class="square"></div>
+                        <div id="p1-wall6" class="square"></div>
+                        <div id="p1-wall7" class="square"></div>
+                        <div id="p1-wall8" class="square"></div>
+                        <div id="p1-wall9" class="square"></div>
+                        <div id="p1-wall10" class="square"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="js/socket.io.js"></script>
+        <script src="js/auto-redirect-if-not-logged.js"></script>
+        <script src="js/ai-game.js" type="module"></script>
+    </body>
+</html>
