@@ -10,8 +10,9 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                height: 100vh;
-                width: 80vh;
+                height: 100%;
+                width: 80%;
+                margin: auto;
             }
             #canvas-container {
                 height: 50%; /* Le canvas prendra l'espace restant */
@@ -31,7 +32,7 @@
             }
             .separator-mobile {
                 height: 70%;
-                width: 5%;
+                width: 3%;
                 border-radius: 40px;
                 background-color: #4650a8;
             }
@@ -39,6 +40,13 @@
             .square{
                 height: 25px;
                 width: 3%;
+            }
+
+            .small-button{
+                height: 20%;
+                width: 40%;
+                margin: 0 10px 10px 10px;
+
             }
 
             #user {
@@ -98,6 +106,10 @@
                         <div id="p1-wall10" class="square"></div>
                     </div>
                 </div>
+            </div>
+            <div style="display: flex;">
+                <button class="small-button" id="confirm">Put Wall</button>
+                <button class="small-button" id="leave" onclick="window.location.href = 'home.html';">Leave</button>
             </div>
         </div>
         <script src="js/socket.io.js"></script>
